@@ -150,4 +150,8 @@ COPY --from=pre-builder /app/.git_sha /app/.git_sha
 
 WORKDIR /app
 
+# Windows checkouts can drop executable bits and CRLF breaks shell shebangs.
+RUN sed -i 's/\r$//' /app/docker/entrypoints/*.sh /app/docker/entrypoints/helpers/*.rb \
+  && chmod +x /app/docker/entrypoints/*.sh /app/docker/entrypoints/helpers/*.rb
+
 EXPOSE 3000

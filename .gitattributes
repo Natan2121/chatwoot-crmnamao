@@ -1,0 +1,2 @@
+docker/entrypoints/*.sh text eol=lf
+docker/entrypoints/helpers/*.rb text eol=lf
