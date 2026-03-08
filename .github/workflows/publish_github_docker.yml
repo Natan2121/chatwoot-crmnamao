@@ -137,15 +137,15 @@ jobs:
         run: |
           SANITIZED_REF=$(echo "$GIT_REF" | sed 's/\//-/g')
           docker buildx imagetools create \
-            -t ghcr.io/${{ github.repository }}:${SANITIZED_REF} \
-            -t ghcr.io/${{ github.repository }}:latest \
-            $(printf 'ghcr.io/${{ github.repository }}@sha256:%s ' *)
+            -t ${{ env.GITHUB_REPO }}:${SANITIZED_REF} \
+            -t ${{ env.GITHUB_REPO }}:latest \
+            $(printf '${{ env.GITHUB_REPO }}@sha256:%s ' *)
 
       - name: Inspect image
         env:
           GIT_REF: ${{ github.event.release.tag_name || github.ref_name }}
         run: |
           SANITIZED_REF=$(echo "$GIT_REF" | sed 's/\//-/g')
-          REPO="ghcr.io/${{ github.repository }}"
+          REPO="${{ env.GITHUB_REPO }}"
           docker buildx imagetools inspect ${REPO}:${SANITIZED_REF}
           docker buildx imagetools inspect ${REPO}:latest
