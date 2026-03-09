@@ -244,6 +244,22 @@ const newReportRoutes = () => [
 
 const reportRoutes = computed(() => newReportRoutes());
 
+const primaryKanbanApp = computed(() => {
+  return (
+    dashboardApps.value.find(app => /kanban/i.test(app.title)) ??
+    dashboardApps.value[0] ??
+    null
+  );
+});
+
+const secondaryDashboardApps = computed(() => {
+  if (!primaryKanbanApp.value) {
+    return [];
+  }
+
+  return dashboardApps.value.filter(app => app.id !== primaryKanbanApp.value.id);
+});
+
 const menuItems = computed(() => {
   const items = [
     {
@@ -256,6 +272,19 @@ const menuItems = computed(() => {
         count: 'notifications/getUnreadCount',
       },
     },
+    ...(primaryKanbanApp.value
+      ? [
+          {
+            name: 'Kanban',
+            label: 'Kanban',
+            icon: 'i-lucide-kanban-square',
+            to: accountScopedRoute('dashboard_app_view', {
+              appId: primaryKanbanApp.value.id,
+            }),
+            activeOn: ['dashboard_app_view'],
+          },
+        ]
+      : []),
     {
       name: 'Conversation',
       label: t('SIDEBAR.CONVERSATIONS'),
@@ -738,13 +767,13 @@ const menuItems = computed(() => {
     },
   ];
 
-  if (dashboardApps.value.length > 0) {
+  if (secondaryDashboardApps.value.length > 0) {
     const settingsIndex = items.findIndex(item => item.name === 'Settings');
     items.splice(settingsIndex, 0, {
       name: 'Apps',
       label: t('SIDEBAR.APPS'),
       icon: 'i-lucide-layout-grid',
-      children: dashboardApps.value.map(app => ({
+      children: secondaryDashboardApps.value.map(app => ({
         name: `app-${app.id}`,
         label: app.title,
         to: accountScopedRoute('dashboard_app_view', { appId: app.id }),
