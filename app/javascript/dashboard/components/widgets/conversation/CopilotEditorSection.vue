@@ -16,6 +16,10 @@ defineProps({
     type: String,
     default: '',
   },
+  placeholder: {
+    type: String,
+    default: '',
+  },
   isPopout: {
     type: Boolean,
     default: false,
@@ -67,6 +71,7 @@ const onSend = () => {
       v-model="copilotEditorContent"
       class="copilot-editor"
       :generated-content="generatedContent"
+      :placeholder="placeholder"
       :min-height="4"
       :enabled-menu-options="[]"
       :is-popout="isPopout"

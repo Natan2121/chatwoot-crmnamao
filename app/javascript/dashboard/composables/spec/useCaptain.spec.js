@@ -116,6 +116,32 @@ describe('useCaptain', () => {
     });
   });
 
+  it('asks about the current conversation', async () => {
+    TasksAPI.askConversation.mockResolvedValue({
+      data: {
+        message: 'A ultima mensagem publica foi Recebido.',
+        follow_up_context: { id: 'ctx-ask', event_name: 'ask_conversation' },
+      },
+    });
+
+    const { askConversation } = useCaptain();
+    const result = await askConversation({
+      message: 'Qual foi a ultima mensagem publica?',
+    });
+
+    expect(TasksAPI.askConversation).toHaveBeenCalledWith(
+      {
+        message: 'Qual foi a ultima mensagem publica?',
+        conversationId: '123',
+      },
+      undefined
+    );
+    expect(result).toEqual({
+      message: 'A ultima mensagem publica foi Recebido.',
+      followUpContext: { id: 'ctx-ask', event_name: 'ask_conversation' },
+    });
+  });
+
   it('sends follow-up message', async () => {
     TasksAPI.followUp.mockResolvedValue({
       data: {
@@ -151,6 +177,9 @@ describe('useCaptain', () => {
     TasksAPI.replySuggestion.mockResolvedValue({
       data: { message: 'Reply' },
     });
+    TasksAPI.askConversation.mockResolvedValue({
+      data: { message: 'Answer' },
+    });
     TasksAPI.rewrite.mockResolvedValue({
       data: { message: 'Rewritten' },
     });
@@ -164,6 +193,16 @@ describe('useCaptain', () => {
     // Test reply_suggestion
     await processEvent('reply_suggestion', '', {});
     expect(TasksAPI.replySuggestion).toHaveBeenCalled();
+
+    // Test ask_conversation
+    await processEvent('ask_conversation', 'Qual foi a ultima mensagem?', {});
+    expect(TasksAPI.askConversation).toHaveBeenCalledWith(
+      {
+        message: 'Qual foi a ultima mensagem?',
+        conversationId: '123',
+      },
+      undefined
+    );
 
     // Test rewrite (improve)
     await processEvent('improve', 'content', {});
