@@ -300,10 +300,16 @@ export default {
       if (this.isPrivate) {
         sendMessageText = this.$t('CONVERSATION.REPLYBOX.CREATE');
       }
+      if (this.isWhatsAppLayout) {
+        return sendMessageText;
+      }
       const keyLabel = this.isEditorHotKeyEnabled('cmd_enter')
         ? `(${this.shortcutKey})`
         : '(↵)';
       return `${sendMessageText} ${keyLabel}`;
+    },
+    editorMinHeight() {
+      return this.isWhatsAppLayout ? 3 : 4;
     },
     replyBoxClass() {
       return {
@@ -1367,7 +1373,6 @@ export default {
           :is-private="isOnPrivateNote"
           :placeholder="messagePlaceHolder"
           :update-selection-with="updateEditorSelectionWith"
-          :min-height="4"
           :disabled="isEditorDisabled"
           enable-variables
           :variables="messageVariables"
@@ -1377,6 +1382,7 @@ export default {
           :signature-separator-override="signatureSeparator"
           :channel-type="channelType"
           :medium="inbox.medium"
+          :min-height="editorMinHeight"
           @typing-off="onTypingOff"
           @typing-on="onTypingOn"
           @focus="onFocus"
@@ -1520,7 +1526,7 @@ export default {
   }
 
   &.is-whatsapp-layout {
-    @apply mb-0 mx-4 rounded-[1.75rem] border-transparent bg-[#f0f2f5];
+    @apply mb-0 mx-4 rounded-[1.5rem] border-transparent bg-[#f0f2f5];
     box-shadow: none;
   }
 }
@@ -1534,7 +1540,7 @@ export default {
 }
 
 .reply-box.is-whatsapp-layout .reply-box__top {
-  @apply rounded-[1.6rem] bg-white px-5 pt-2;
+  @apply rounded-[1.45rem] bg-white px-4 pt-1.5;
   box-shadow: 0 1px 1px rgba(11, 20, 26, 0.08);
 }
 
@@ -1564,7 +1570,7 @@ export default {
   }
 
   :deep(.reply-box__editor--whatsapp .ProseMirror-menubar-wrapper) {
-    @apply gap-2;
+    @apply gap-1.5;
   }
 
   :deep(.reply-box__editor--whatsapp .ProseMirror-menubar) {
@@ -1597,11 +1603,11 @@ export default {
   :deep(
       .reply-box__editor--whatsapp > .ProseMirror-menubar-wrapper > .ProseMirror
     ) {
-    @apply rounded-[1.75rem] bg-transparent px-1 pb-0 pt-0 text-[15px] leading-6 text-[#111b21];
+    @apply rounded-[1.5rem] bg-transparent px-1 pb-0 pt-0 text-[15px] leading-6 text-[#111b21];
   }
 
   :deep(.reply-box__editor--whatsapp .ProseMirror-woot-style) {
-    @apply min-h-[3.75rem] max-h-[11rem] px-2 py-2;
+    @apply min-h-[3rem] max-h-[9.5rem] px-2 py-2;
   }
 
   :deep(.reply-box__editor--whatsapp .ProseMirror p),

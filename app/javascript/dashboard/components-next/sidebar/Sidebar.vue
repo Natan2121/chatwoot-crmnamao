@@ -6,12 +6,15 @@ import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { useWindowSize, useEventListener } from '@vueuse/core';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import { useUISettings } from 'dashboard/composables/useUISettings';
+import { shouldUseWhatsAppWorkspaceLayout } from 'dashboard/helper/conversationAppearance';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
@@ -40,6 +43,8 @@ const emit = defineEmits([
 
 const { accountScopedRoute, isOnChatwootCloud } = useAccount();
 const store = useStore();
+const route = useRoute();
+const { uiSettings } = useUISettings();
 const searchShortcut = useKbd([`$mod`, 'k']);
 const { t } = useI18n();
 
@@ -120,14 +125,6 @@ const isResizing = ref(false);
 const startX = ref(0);
 const startWidth = ref(0);
 
-provideSidebarContext({
-  expandedItem,
-  setExpandedItem,
-  isCollapsed: isEffectivelyCollapsed,
-  sidebarWidth,
-  isResizing,
-});
-
 // Get clientX from mouse or touch event
 const getClientX = event =>
   event.touches ? event.touches[0].clientX : event.clientX;
@@ -179,6 +176,8 @@ useEventListener(document, 'touchmove', onResizeMove, { passive: false });
 useEventListener(document, 'touchend', onResizeEnd);
 
 const inboxes = useMapGetter('inboxes/getInboxes');
+const currentChat = useMapGetter('getSelectedChat');
+const activeInboxId = useMapGetter('getSelectedInbox');
 const labels = useMapGetter('labels/getLabelsOnSidebar');
 const dashboardApps = useMapGetter('dashboardApps/getAppsOnSidebar');
 const teams = useMapGetter('teams/getMyTeams');
@@ -201,6 +200,48 @@ onMounted(() => {
 const sortedInboxes = computed(() =>
   inboxes.value.slice().sort((a, b) => a.name.localeCompare(b.name))
 );
+
+const currentWorkspaceInbox = computed(() => {
+  const inboxId = currentChat.value?.inbox_id || activeInboxId.value;
+  if (!inboxId) {
+    return null;
+  }
+
+  return store.getters['inboxes/getInbox'](inboxId);
+});
+
+const useCompactWhatsAppSidebar = computed(() => {
+  return (
+    !isMobile.value &&
+    shouldUseWhatsAppWorkspaceLayout(
+      uiSettings.value,
+      currentWorkspaceInbox.value,
+      route
+    )
+  );
+});
+
+const isSidebarCompact = computed(
+  () => useCompactWhatsAppSidebar.value || isEffectivelyCollapsed.value
+);
+
+const desktopSidebarStyle = computed(() => {
+  if (isMobile.value) {
+    return undefined;
+  }
+
+  return {
+    width: `${useCompactWhatsAppSidebar.value ? 76 : sidebarWidth.value}px`,
+  };
+});
+
+provideSidebarContext({
+  expandedItem,
+  setExpandedItem,
+  isCollapsed: isSidebarCompact,
+  sidebarWidth,
+  isResizing,
+});
 
 const closeMobileSidebar = () => {
   if (!props.isMobileSidebarOpen) return;
@@ -257,7 +298,9 @@ const secondaryDashboardApps = computed(() => {
     return [];
   }
 
-  return dashboardApps.value.filter(app => app.id !== primaryKanbanApp.value.id);
+  return dashboardApps.value.filter(
+    app => app.id !== primaryKanbanApp.value.id
+  );
 });
 
 const menuItems = computed(() => {
@@ -800,21 +843,24 @@ const menuItems = computed(() => {
         'transition-transform duration-200 ease-out md:transition-[width]':
           !isResizing,
       },
+      useCompactWhatsAppSidebar
+        ? 'sidebar--whatsapp-workspace bg-[#f7f8fa] border-[#d8dde1]'
+        : '',
     ]"
-    :style="isMobile ? undefined : { width: `${sidebarWidth}px` }"
+    :style="desktopSidebarStyle"
   >
     <section
       class="grid"
-      :class="isEffectivelyCollapsed ? 'mt-3 mb-6 gap-4' : 'mt-1 mb-4 gap-2'"
+      :class="isSidebarCompact ? 'mt-3 mb-6 gap-4' : 'mt-1 mb-4 gap-2'"
     >
       <div
         class="flex gap-2 items-center min-w-0"
         :class="{
-          'justify-center px-1': isEffectivelyCollapsed,
-          'px-2': !isEffectivelyCollapsed,
+          'justify-center px-1': isSidebarCompact,
+          'px-2': !isSidebarCompact,
         }"
       >
-        <template v-if="isEffectivelyCollapsed">
+        <template v-if="isSidebarCompact">
           <SidebarAccountSwitcher
             is-collapsed
             @show-create-account-modal="emit('showCreateAccountModal')"
@@ -833,10 +879,10 @@ const menuItems = computed(() => {
       </div>
       <div
         class="flex gap-2"
-        :class="isEffectivelyCollapsed ? 'flex-col items-center' : 'px-2'"
+        :class="isSidebarCompact ? 'flex-col items-center' : 'px-2'"
       >
         <RouterLink
-          v-if="!isEffectivelyCollapsed"
+          v-if="!isSidebarCompact"
           :to="{ name: 'search' }"
           class="flex gap-2 items-center px-2 py-1 w-full h-7 rounded-lg outline outline-1 outline-n-weak bg-n-button-color transition-all duration-100 ease-out"
         >
@@ -866,7 +912,7 @@ const menuItems = computed(() => {
               size="sm"
               class="dark:hover:!bg-n-slate-9/30"
               :class="[
-                isEffectivelyCollapsed
+                isSidebarCompact
                   ? '!size-8 !outline-n-weak !text-n-slate-11'
                   : '!h-7 !outline-n-weak !text-n-slate-11',
                 { '!bg-n-alpha-2 dark:!bg-n-slate-9/30': isOpen },
@@ -879,11 +925,11 @@ const menuItems = computed(() => {
     </section>
     <nav
       class="grid overflow-y-scroll flex-grow gap-2 pb-5 no-scrollbar min-w-0"
-      :class="isEffectivelyCollapsed ? 'px-1' : 'px-2'"
+      :class="isSidebarCompact ? 'px-1' : 'px-2'"
     >
       <ul
         class="flex flex-col gap-1 m-0 list-none min-w-0"
-        :class="{ 'items-center': isEffectivelyCollapsed }"
+        :class="{ 'items-center': isSidebarCompact }"
       >
         <SidebarGroup
           v-for="item in menuItems"
@@ -900,30 +946,27 @@ const menuItems = computed(() => {
       />
       <SidebarChangelogCard
         v-if="
-          isOnChatwootCloud &&
-          !isACustomBrandedInstance &&
-          !isEffectivelyCollapsed
+          isOnChatwootCloud && !isACustomBrandedInstance && !isSidebarCompact
         "
       />
       <SidebarChangelogButton
         v-if="
-          isOnChatwootCloud &&
-          !isACustomBrandedInstance &&
-          isEffectivelyCollapsed
+          isOnChatwootCloud && !isACustomBrandedInstance && isSidebarCompact
         "
       />
       <div
         class="p-1 flex-shrink-0 flex w-full z-50 gap-2 items-center border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)]"
-        :class="isEffectivelyCollapsed ? 'justify-center' : 'justify-between'"
+        :class="isSidebarCompact ? 'justify-center' : 'justify-between'"
       >
         <SidebarProfileMenu
-          :is-collapsed="isEffectivelyCollapsed"
+          :is-collapsed="isSidebarCompact"
           @open-key-shortcut-modal="emit('openKeyShortcutModal')"
         />
       </div>
     </section>
     <!-- Resize Handle (desktop only) -->
     <div
+      v-if="!useCompactWhatsAppSidebar"
       class="hidden md:block absolute top-0 h-full w-1 cursor-col-resize z-40 ltr:right-0 rtl:left-0 group"
       @mousedown="onResizeStart"
       @touchstart="onResizeStart"
@@ -936,3 +979,25 @@ const menuItems = computed(() => {
     </div>
   </aside>
 </template>
+
+<style scoped lang="scss">
+.sidebar--whatsapp-workspace {
+  box-shadow: inset -1px 0 0 rgba(17, 27, 33, 0.05);
+
+  &::before {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.82),
+        rgba(247, 248, 250, 0)
+      ),
+      radial-gradient(circle at top, rgba(0, 168, 132, 0.05), transparent 58%);
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+</style>

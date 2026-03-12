@@ -149,7 +149,7 @@ export default {
     class="reply-top-panel flex justify-between gap-2 items-center"
     :class="
       isWhatsAppLayout
-        ? 'reply-top-panel--whatsapp h-12 ltr:pl-4 ltr:pr-3 rtl:pr-4 rtl:pl-3'
+        ? 'reply-top-panel--whatsapp h-10 ltr:pl-4 ltr:pr-2 rtl:pr-4 rtl:pl-2'
         : 'h-[3.25rem] ltr:pl-3 ltr:pr-2 rtl:pr-3 rtl:pl-2'
     "
   >
@@ -160,14 +160,23 @@ export default {
       :is-whats-app-layout="isWhatsAppLayout"
       @toggle-mode="handleModeToggle"
     />
-    <div class="flex items-center mx-4 my-0">
+    <div
+      class="flex items-center my-0"
+      :class="
+        isWhatsAppLayout ? 'mx-0 ml-auto rtl:mr-auto text-[11px]' : 'mx-4'
+      "
+    >
       <div v-if="isMessageLengthReachingThreshold" class="text-xs">
         <span :class="charLengthClass">
           {{ characterLengthWarning }}
         </span>
       </div>
     </div>
-    <div v-if="captainTasksEnabled" class="flex items-center gap-2">
+    <div
+      v-if="captainTasksEnabled"
+      class="flex items-center"
+      :class="isWhatsAppLayout ? 'gap-1.5' : 'gap-2'"
+    >
       <div class="relative">
         <NextButton
           ghost
@@ -205,6 +214,7 @@ export default {
     @apply border-0;
     background-color: #f0f2f5;
     color: #54656f;
+    min-height: 2.25rem;
   }
 
   :deep(button:hover) {

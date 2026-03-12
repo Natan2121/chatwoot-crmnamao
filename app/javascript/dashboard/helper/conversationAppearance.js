@@ -44,3 +44,26 @@ export const shouldUseWhatsAppConversationLayout = (uiSettings, inbox) => {
     CONVERSATION_VISUAL_MODES.WHATSAPP
   );
 };
+
+export const isConversationWorkspaceRoute = route => {
+  if (!route) {
+    return false;
+  }
+
+  const routeName = String(route.name || '');
+  const path = route.path || '';
+
+  return (
+    routeName === 'home' ||
+    routeName.includes('conversation') ||
+    path.includes('/conversations') ||
+    path.includes('/inboxes/')
+  );
+};
+
+export const shouldUseWhatsAppWorkspaceLayout = (uiSettings, inbox, route) => {
+  return (
+    shouldUseWhatsAppConversationLayout(uiSettings, inbox) &&
+    isConversationWorkspaceRoute(route)
+  );
+};

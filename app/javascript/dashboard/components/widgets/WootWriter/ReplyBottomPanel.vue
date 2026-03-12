@@ -302,6 +302,15 @@ export default {
 
       return this.isWhatsAppLayout ? 'teal' : 'blue';
     },
+    sendButtonLabel() {
+      return this.isWhatsAppLayout ? '' : this.sendButtonText;
+    },
+    sendButtonIcon() {
+      return this.isWhatsAppLayout ? 'i-ph-paper-plane-tilt-fill' : '';
+    },
+    sendButtonSize() {
+      return this.isWhatsAppLayout ? 'md' : 'sm';
+    },
   },
   mounted() {
     ActiveStorage.start();
@@ -446,15 +455,18 @@ export default {
     <div class="right-wrap">
       <div v-if="showScheduleOptions && !isNote" class="flex">
         <NextButton
-          :label="sendButtonText"
+          :label="sendButtonLabel"
+          :icon="sendButtonIcon"
           type="submit"
-          sm
+          :size="sendButtonSize"
           :color="sendButtonColor"
           :disabled="isSendDisabled"
           class="flex-shrink-0"
+          :aria-label="sendButtonText"
+          :title="sendButtonText"
           :class="
             isWhatsAppLayout
-              ? '!rounded-l-full !rounded-r-none !bg-[#00a884] px-4 hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
+              ? '!size-11 !rounded-full !bg-[#00a884] hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
               : '!rounded-r-none'
           "
           @click="onSend"
@@ -463,16 +475,21 @@ export default {
           <template #trigger="{ toggle, isOpen }">
             <NextButton
               type="button"
-              sm
+              :size="sendButtonSize"
               :color="sendButtonColor"
               icon="i-lucide-chevron-down"
               :disabled="isSendDisabled"
-              class="flex-shrink-0 !border-l border-l-white/20 !px-1.5"
+              class="flex-shrink-0"
+              :aria-label="$t('CONVERSATION.REPLYBOX.SCHEDULE_SEND')"
+              :title="$t('CONVERSATION.REPLYBOX.SCHEDULE_SEND')"
               :class="[
                 isWhatsAppLayout
-                  ? '!rounded-r-full !rounded-l-none !bg-[#00a884] hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
+                  ? '!size-11 !rounded-full !bg-[#00a884] hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
                   : '!rounded-l-none',
-                { 'bg-n-blue-11': isOpen },
+                {
+                  '!border-l border-l-white/20 !px-1.5': !isWhatsAppLayout,
+                  'bg-n-blue-11': isOpen,
+                },
               ]"
               @click="toggle"
             />
@@ -490,15 +507,18 @@ export default {
       </div>
       <NextButton
         v-else
-        :label="sendButtonText"
+        :label="sendButtonLabel"
+        :icon="sendButtonIcon"
         type="submit"
-        sm
+        :size="sendButtonSize"
         :color="sendButtonColor"
         :disabled="isSendDisabled"
         class="flex-shrink-0"
+        :aria-label="sendButtonText"
+        :title="sendButtonText"
         :class="
           isWhatsAppLayout
-            ? '!rounded-full !bg-[#00a884] px-4 hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
+            ? '!size-11 !rounded-full !bg-[#00a884] hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
             : ''
         "
         @click="onSend"

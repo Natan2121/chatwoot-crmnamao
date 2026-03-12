@@ -1,8 +1,10 @@
 import {
   CONVERSATION_VISUAL_MODES,
+  isConversationWorkspaceRoute,
   isWhatsAppConversationInbox,
   resolveConversationVisualMode,
   shouldUseWhatsAppConversationLayout,
+  shouldUseWhatsAppWorkspaceLayout,
 } from '../conversationAppearance';
 import { INBOX_TYPES } from '../inbox';
 
@@ -57,6 +59,51 @@ describe('conversationAppearance', () => {
       shouldUseWhatsAppConversationLayout(
         {},
         { channel_type: INBOX_TYPES.EMAIL }
+      )
+    ).toBe(false);
+  });
+
+  it('detects conversation workspace routes', () => {
+    expect(
+      isConversationWorkspaceRoute({
+        name: 'home',
+        path: '/app/accounts/1/conversations',
+      })
+    ).toBe(true);
+    expect(
+      isConversationWorkspaceRoute({
+        name: 'inbox_dashboard',
+        path: '/app/accounts/1/inboxes/4',
+      })
+    ).toBe(true);
+    expect(
+      isConversationWorkspaceRoute({
+        name: 'contacts_dashboard',
+        path: '/app/accounts/1/contacts',
+      })
+    ).toBe(false);
+  });
+
+  it('activates the WhatsApp workspace only on conversation routes', () => {
+    expect(
+      shouldUseWhatsAppWorkspaceLayout(
+        {},
+        { channel_type: INBOX_TYPES.WHATSAPP },
+        { name: 'home', path: '/app/accounts/1/conversations' }
+      )
+    ).toBe(true);
+    expect(
+      shouldUseWhatsAppWorkspaceLayout(
+        {},
+        { channel_type: INBOX_TYPES.WHATSAPP },
+        { name: 'contacts_dashboard', path: '/app/accounts/1/contacts' }
+      )
+    ).toBe(false);
+    expect(
+      shouldUseWhatsAppWorkspaceLayout(
+        {},
+        { channel_type: INBOX_TYPES.EMAIL },
+        { name: 'home', path: '/app/accounts/1/conversations' }
       )
     ).toBe(false);
   });

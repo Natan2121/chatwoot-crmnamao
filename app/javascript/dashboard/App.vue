@@ -6,7 +6,7 @@ import UpdateBanner from './components/app/UpdateBanner.vue';
 import PaymentPendingBanner from './components/app/PaymentPendingBanner.vue';
 import PendingEmailVerificationBanner from './components/app/PendingEmailVerificationBanner.vue';
 import vueActionCable from './helper/actionCable';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useStore } from 'dashboard/composables/store';
 import WootSnackbarBox from './components/SnackbarContainer.vue';
 import { setColorTheme } from './helper/themeHelper';
@@ -19,6 +19,7 @@ import {
 } from './helper/pushHelper';
 import ReconnectService from 'dashboard/helper/ReconnectService';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { shouldUseWhatsAppWorkspaceLayout } from 'dashboard/helper/conversationAppearance';
 
 export default {
   name: 'App',
@@ -33,6 +34,7 @@ export default {
   },
   setup() {
     const router = useRouter();
+    const route = useRoute();
     const store = useStore();
     const { accountId } = useAccount();
     // Use the font size composable (it automatically sets up the watcher)
@@ -41,6 +43,7 @@ export default {
 
     return {
       router,
+      route,
       store,
       currentAccountId: accountId,
       currentFontSize,
@@ -60,9 +63,26 @@ export default {
       currentUser: 'getCurrentUser',
       authUIFlags: 'getAuthUIFlags',
       accountUIFlags: 'accounts/getUIFlags',
+      selectedChat: 'getSelectedChat',
+      selectedInboxId: 'getSelectedInbox',
     }),
     hideOnOnboardingView() {
       return !isOnOnboardingView(this.$route);
+    },
+    currentConversationInbox() {
+      const inboxId = this.selectedChat?.inbox_id || this.selectedInboxId;
+      if (!inboxId) {
+        return null;
+      }
+
+      return this.$store.getters['inboxes/getInbox'](inboxId);
+    },
+    isWhatsAppConversationWorkspace() {
+      return shouldUseWhatsAppWorkspaceLayout(
+        this.uiSettings,
+        this.currentConversationInbox,
+        this.route
+      );
     },
   },
 
@@ -134,7 +154,10 @@ export default {
     class="flex flex-col w-full h-screen min-h-0 bg-n-background"
     :dir="isRTL ? 'rtl' : 'ltr'"
   >
-    <UpdateBanner :latest-chatwoot-version="latestChatwootVersion" />
+    <UpdateBanner
+      v-if="!isWhatsAppConversationWorkspace"
+      :latest-chatwoot-version="latestChatwootVersion"
+    />
     <template v-if="currentAccountId">
       <PendingEmailVerificationBanner v-if="hideOnOnboardingView" />
       <PaymentPendingBanner v-if="hideOnOnboardingView" />
