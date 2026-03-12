@@ -24,6 +24,7 @@ const {
   additionalAttributes,
   sender,
   currentUserId,
+  isWhatsAppLayout,
 } = useMessageContext();
 
 const formattedContent = computed(() => {
@@ -135,11 +136,21 @@ const iconColorClass = computed(() => {
     ? 'text-n-amber-12/50'
     : 'text-n-slate-11';
 });
+
+const contentClass = computed(() => {
+  return isWhatsAppLayout.value
+    ? '[overflow-wrap:break-word] [word-break:normal]'
+    : '';
+});
 </script>
 
 <template>
   <span class="inline">
-    <span v-dompurify-html="formattedContent" class="prose prose-bubble" />
+    <span
+      v-dompurify-html="formattedContent"
+      class="prose prose-bubble"
+      :class="contentClass"
+    />
     <span
       v-if="shouldShowScheduledIndicator"
       v-tooltip.top="{

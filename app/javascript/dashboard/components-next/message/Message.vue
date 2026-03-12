@@ -253,12 +253,12 @@ const flexOrientationClass = computed(() => {
 
 const gridClass = computed(() => {
   if (isWhatsAppLayout.value) {
-    return 'grid grid-cols-1fr';
+    return 'grid grid-cols-[minmax(0,1fr)]';
   }
 
   const map = {
-    [ORIENTATION.LEFT]: 'grid grid-cols-1fr',
-    [ORIENTATION.RIGHT]: 'grid grid-cols-[1fr_24px]',
+    [ORIENTATION.LEFT]: 'grid grid-cols-[minmax(0,1fr)]',
+    [ORIENTATION.RIGHT]: 'grid grid-cols-[minmax(0,1fr)_24px]',
   };
 
   return map[orientation.value];
@@ -586,7 +586,7 @@ provideMessageContext({
         <Avatar v-bind="avatarInfo" :size="24" />
       </div>
       <div
-        class="[grid-area:bubble] flex"
+        class="[grid-area:bubble] flex min-w-0"
         :class="{
           'ltr:ml-8 rtl:mr-8 justify-end':
             orientation === ORIENTATION.RIGHT && !isWhatsAppLayout,

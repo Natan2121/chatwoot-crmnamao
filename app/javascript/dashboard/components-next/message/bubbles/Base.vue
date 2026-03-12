@@ -134,7 +134,7 @@ const bubbleWidthClass = computed(() => {
     return '';
   }
 
-  return isWhatsAppLayout.value ? 'max-w-[78%]' : 'max-w-lg';
+  return isWhatsAppLayout.value ? 'max-w-[78%] w-fit min-w-0' : 'max-w-lg';
 });
 
 const replyToPreview = computed(() => {
