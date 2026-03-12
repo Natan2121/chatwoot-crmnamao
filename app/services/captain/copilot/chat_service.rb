@@ -25,10 +25,13 @@ class Captain::Copilot::ChatService < Captain::BaseTaskService
   private
 
   def build_messages
-    messages = [{ role: 'system', content: system_prompt }]
-    messages << { role: 'system', content: formatted_conversation_context } if conversation.present?
+    messages = [{ role: 'system', content: combined_system_prompt }]
     messages.concat(copilot_thread.previous_history)
     messages
+  end
+
+  def combined_system_prompt
+    [system_prompt, conversation_context_prompt].compact.join("\n\n")
   end
 
   def system_prompt
@@ -42,6 +45,12 @@ class Captain::Copilot::ChatService < Captain::BaseTaskService
       "Descricao do assistente: #{assistant.description}.",
       additional_instructions
     ].compact.join("\n")
+  end
+
+  def conversation_context_prompt
+    return if conversation.blank?
+
+    formatted_conversation_context
   end
 
   def additional_instructions
