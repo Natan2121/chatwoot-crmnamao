@@ -100,6 +100,14 @@ const handleReset = () => {
   selectedCopilotThreadId.value = null;
 };
 
+const refreshMessages = async threadId => {
+  if (!threadId) {
+    return;
+  }
+
+  await store.dispatch('copilotMessages/get', threadId);
+};
+
 const sendMessage = async message => {
   try {
     if (selectedCopilotThreadId.value) {
@@ -109,6 +117,7 @@ const sendMessage = async message => {
         threadId: selectedCopilotThreadId.value,
         message,
       });
+      await refreshMessages(selectedCopilotThreadId.value);
     } else {
       const response = await store.dispatch('copilotThreads/create', {
         assistant_id: activeAssistant.value.id,
@@ -116,6 +125,7 @@ const sendMessage = async message => {
         message,
       });
       selectedCopilotThreadId.value = response.id;
+      await refreshMessages(response.id);
     }
   } catch (error) {
     useAlert(error.message);
