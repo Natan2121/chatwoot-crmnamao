@@ -260,7 +260,7 @@ const deleteConversation = () => {
     :class="[
       compact ? 'px-0' : 'px-3',
       isWhatsAppLayout
-        ? 'items-center bg-white hover:bg-[#f5f6f6]'
+        ? 'conversation--whatsapp items-center bg-white hover:bg-[#f5f6f6]'
         : 'items-start py-0 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3',
       {
         'active animate-card-select bg-[#f0f2f5]':
@@ -283,7 +283,7 @@ const deleteConversation = () => {
         v-if="!hideThumbnail"
         :name="currentContact.name"
         :src="currentContact.thumbnail"
-        :size="isWhatsAppLayout ? 40 : 32"
+        :size="isWhatsAppLayout ? 44 : 32"
         :status="currentContact.availability_status"
         :class="isWhatsAppLayout ? 'mt-0' : !showInboxName ? 'mt-4' : 'mt-8'"
         hide-offline-status
@@ -309,7 +309,7 @@ const deleteConversation = () => {
     </div>
     <div
       v-if="isWhatsAppLayout"
-      class="flex-1 min-w-0 py-3 ltr:pl-3 rtl:pr-3 border-b border-[#e9edef]"
+      class="conversation--whatsapp__body flex-1 min-w-0 py-2.5 ltr:pl-3 rtl:pr-3 border-b border-[#e9edef]"
     >
       <div class="flex items-start gap-3 min-w-0">
         <div class="flex-1 min-w-0">
@@ -364,7 +364,7 @@ const deleteConversation = () => {
             </p>
             <span
               v-if="hasUnread"
-              class="inline-flex min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full bg-[#25d366] px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-[#111b21]"
+              class="inline-flex min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full bg-[#25d366] px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-white"
             >
               {{ unreadCountLabel }}
             </span>
@@ -521,3 +521,18 @@ const deleteConversation = () => {
     </ContextMenu>
   </div>
 </template>
+
+<style scoped lang="scss">
+.conversation--whatsapp {
+  @apply px-2;
+}
+
+.conversation--whatsapp__body {
+  padding-inline-end: 0.25rem;
+}
+
+.conversation--whatsapp.active .conversation--whatsapp__body,
+.conversation--whatsapp:hover .conversation--whatsapp__body {
+  border-color: transparent;
+}
+</style>

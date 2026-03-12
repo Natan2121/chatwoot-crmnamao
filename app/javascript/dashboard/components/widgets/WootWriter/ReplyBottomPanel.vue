@@ -324,7 +324,10 @@ export default {
 </script>
 
 <template>
-  <div class="flex justify-between p-3" :class="wrapClass">
+  <div
+    class="reply-bottom-panel flex justify-between gap-3 p-3"
+    :class="wrapClass"
+  >
     <div class="left-wrap">
       <NextButton
         v-if="!isEditorDisabled"
@@ -514,18 +517,41 @@ export default {
 }
 
 .is-whatsapp-layout {
-  @apply px-4 py-2;
+  @apply px-1 pb-3 pt-2;
 
   .left-wrap {
-    @apply gap-1.5;
+    @apply flex-1 flex-wrap gap-1.5;
   }
 
   .right-wrap {
-    @apply items-center;
+    @apply items-center gap-2 ltr:pl-2 rtl:pr-2;
   }
 
   :deep(button) {
     @apply rounded-full;
+    min-height: 2.5rem;
+  }
+
+  .left-wrap {
+    :deep(button) {
+      @apply border-0 text-[#54656f];
+      background-color: #f0f2f5;
+      box-shadow: none;
+    }
+
+    :deep(button:hover) {
+      background-color: #e4e6e7;
+    }
+
+    :deep(button:focus-visible) {
+      background-color: #e4e6e7;
+    }
+  }
+
+  .right-wrap {
+    :deep(button) {
+      @apply font-semibold tracking-[0.01em];
+    }
   }
 }
 

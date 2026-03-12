@@ -924,12 +924,14 @@ watch(conversationFilters, (newVal, oldVal) => {
   <div
     class="flex flex-col flex-shrink-0 conversations-list-wrap"
     :class="[
-      isWhatsAppLayout ? 'bg-[#f0f2f5]' : 'bg-n-surface-1',
+      isWhatsAppLayout
+        ? 'chat-list-shell--whatsapp bg-[#f0f2f5]'
+        : 'bg-n-surface-1',
       { hidden: !showConversationList },
       isOnExpandedLayout
         ? 'basis-full'
         : isWhatsAppLayout
-          ? 'w-[360px] 2xl:w-[440px]'
+          ? 'w-[380px] 2xl:w-[456px]'
           : 'w-[340px] 2xl:w-[412px]',
     ]"
   >
@@ -983,7 +985,9 @@ watch(conversationFilters, (newVal, oldVal) => {
     <p
       v-if="!chatListLoading && !conversationList.length"
       class="flex overflow-auto justify-center items-center p-4"
-      :class="isWhatsAppLayout ? 'bg-white text-[#667781]' : ''"
+      :class="
+        isWhatsAppLayout ? 'chat-list-empty-state bg-white text-[#667781]' : ''
+      "
     >
       {{ $t('CHAT_LIST.LIST.404') }}
     </p>
@@ -1005,7 +1009,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       ref="conversationListRef"
       class="overflow-hidden flex-1 conversations-list hover:overflow-y-auto"
       :class="[
-        isWhatsAppLayout ? 'bg-white' : '',
+        isWhatsAppLayout ? 'chat-list-body--whatsapp bg-white' : '',
         { 'overflow-hidden': isContextMenuOpen },
       ]"
     >
@@ -1014,6 +1018,7 @@ watch(conversationFilters, (newVal, oldVal) => {
         :items="conversationList"
         :min-item-size="24"
         class="overflow-auto w-full h-full"
+        :class="isWhatsAppLayout ? 'chat-list-scroller--whatsapp' : ''"
       >
         <template #default="{ item, index, active }">
           <!--
@@ -1050,7 +1055,8 @@ watch(conversationFilters, (newVal, oldVal) => {
           </div>
           <p
             v-else-if="showEndOfListMessage"
-            class="p-4 text-center text-n-slate-11"
+            class="p-4 text-center"
+            :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-11'"
           >
             {{ $t('CHAT_LIST.EOF') }}
           </p>
@@ -1094,3 +1100,42 @@ watch(conversationFilters, (newVal, oldVal) => {
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.chat-list-shell--whatsapp {
+  border-right: 1px solid #d1d7db;
+  background: linear-gradient(
+    180deg,
+    #f0f2f5 0,
+    #f0f2f5 7.5rem,
+    #ffffff 7.5rem,
+    #ffffff 100%
+  );
+}
+
+.chat-list-empty-state {
+  @apply m-3 rounded-[1.25rem] border border-[#e9edef] px-8 text-sm;
+  min-height: 10rem;
+}
+
+.chat-list-body--whatsapp {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.chat-list-scroller--whatsapp {
+  scrollbar-color: #c5cfd4 transparent;
+}
+
+.chat-list-scroller--whatsapp::-webkit-scrollbar {
+  width: 0.375rem;
+}
+
+.chat-list-scroller--whatsapp::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background-color: #c5cfd4;
+}
+
+.chat-list-scroller--whatsapp::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+</style>

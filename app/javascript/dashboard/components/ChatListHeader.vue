@@ -61,7 +61,7 @@ const toggleConversationLayout = () => {
     class="chat-list-header flex items-center justify-between gap-2"
     :class="[
       props.isWhatsAppLayout
-        ? 'chat-list-header--whatsapp h-[4.5rem] border-b border-[#d1d7db] bg-[#f0f2f5] px-4'
+        ? 'chat-list-header--whatsapp h-[4.625rem] border-b border-[#d8dde1] bg-[#f0f2f5] px-4'
         : 'h-[3.25rem] px-3',
       {
         'border-b border-n-strong':
@@ -74,7 +74,7 @@ const toggleConversationLayout = () => {
         class="truncate"
         :class="
           props.isWhatsAppLayout
-            ? 'text-[19px] font-semibold text-[#111b21]'
+            ? 'text-[18px] font-semibold tracking-[-0.01em] text-[#111b21]'
             : 'text-base font-medium text-n-slate-12'
         "
         :title="pageTitle"
@@ -191,19 +191,23 @@ const toggleConversationLayout = () => {
 
 .chat-list-header--whatsapp {
   .chat-list-header__badge {
-    @apply rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#54656f];
-    box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+    @apply rounded-full px-3 py-1 text-[11px] font-medium text-[#54656f];
+    background-color: #e7eaed;
   }
 
   .chat-list-header__actions {
     :deep(button) {
       @apply rounded-full border-0 text-[#54656f];
-      background-color: rgba(255, 255, 255, 0.9);
-      box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+      background-color: transparent;
+      box-shadow: none;
     }
 
     :deep(button:hover) {
-      background-color: #ffffff;
+      background-color: #e4e6e7;
+    }
+
+    :deep(button:focus-visible) {
+      background-color: #e4e6e7;
     }
   }
 }

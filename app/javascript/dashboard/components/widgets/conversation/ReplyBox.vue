@@ -1520,8 +1520,8 @@ export default {
   }
 
   &.is-whatsapp-layout {
-    @apply mb-0 mx-4 rounded-3xl border-transparent bg-white;
-    box-shadow: 0 1px 1px rgba(11, 20, 26, 0.08);
+    @apply mb-0 mx-4 rounded-[1.75rem] border-transparent bg-[#f0f2f5];
+    box-shadow: none;
   }
 }
 
@@ -1534,12 +1534,13 @@ export default {
 }
 
 .reply-box.is-whatsapp-layout .reply-box__top {
-  @apply px-5 pt-1;
+  @apply rounded-[1.6rem] bg-white px-5 pt-2;
+  box-shadow: 0 1px 1px rgba(11, 20, 26, 0.08);
 }
 
 .reply-box.is-whatsapp-layout {
   :deep(.reply-box__editor--whatsapp) {
-    @apply pb-1;
+    @apply pb-0;
   }
 
   :deep(.reply-box__editor--whatsapp .signature-preview) {
@@ -1596,7 +1597,7 @@ export default {
   :deep(
       .reply-box__editor--whatsapp > .ProseMirror-menubar-wrapper > .ProseMirror
     ) {
-    @apply rounded-[1.75rem] bg-transparent px-1 pb-1 pt-0 text-[15px] leading-6 text-[#111b21];
+    @apply rounded-[1.75rem] bg-transparent px-1 pb-0 pt-0 text-[15px] leading-6 text-[#111b21];
   }
 
   :deep(.reply-box__editor--whatsapp .ProseMirror-woot-style) {
