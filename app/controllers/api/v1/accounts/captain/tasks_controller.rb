@@ -33,6 +33,16 @@ class Api::V1::Accounts::Captain::TasksController < Api::V1::Accounts::BaseContr
     render_result(result)
   end
 
+  def ask_conversation
+    result = Captain::AskConversationService.new(
+      account: Current.account,
+      user_message: params[:message],
+      conversation_display_id: params[:conversation_display_id]
+    ).perform
+
+    render_result(result)
+  end
+
   def label_suggestion
     result = Captain::LabelSuggestionService.new(
       account: Current.account,

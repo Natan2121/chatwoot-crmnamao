@@ -11,6 +11,7 @@ class Captain::FollowUpService < Captain::BaseTaskService
     improve
     summarize
     reply_suggestion
+    ask_conversation
     label_suggestion
   ].freeze
 
@@ -68,6 +69,8 @@ class Captain::FollowUpService < Captain::BaseTaskService
       'conversation summary'
     when 'reply_suggestion'
       'reply suggestion'
+    when 'ask_conversation'
+      'conversation question answering'
     when 'label_suggestion'
       'label suggestion'
     else

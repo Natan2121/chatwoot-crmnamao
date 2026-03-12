@@ -174,6 +174,29 @@ export function useCaptain() {
   };
 
   /**
+   * Answers a free-form operator question using the current conversation context.
+   * @param {Object} options - The ask options.
+   * @param {string} options.message - The operator question.
+   * @param {AbortSignal} [options.signal] - AbortSignal to cancel the request.
+   * @returns {Promise<{message: string, followUpContext?: Object}>} The answer and optional follow-up context.
+   */
+  const askConversation = async ({ message, signal }) => {
+    try {
+      const result = await TasksAPI.askConversation(
+        { message, conversationId: conversationId.value },
+        signal
+      );
+      const {
+        data: { message: generatedMessage, follow_up_context: followUpContext },
+      } = result;
+      return { message: generatedMessage, followUpContext };
+    } catch (error) {
+      handleAPIError(error);
+      return { message: '', errorType: getErrorType(error) };
+    }
+  };
+
+  /**
    * Sends a follow-up message to refine a previous AI task result.
    * @param {Object} options - The follow-up options.
    * @param {Object} options.followUpContext - The follow-up context from a previous task.
@@ -216,6 +239,9 @@ export function useCaptain() {
     if (type === 'reply_suggestion') {
       return getReplySuggestion(options);
     }
+    if (type === 'ask_conversation') {
+      return askConversation({ message: content, signal: options.signal });
+    }
     // All other types are rewrite operations
     return rewriteContent(content, type, options);
   };
@@ -240,6 +266,7 @@ export function useCaptain() {
     rewriteContent,
     summarizeConversation,
     getReplySuggestion,
+    askConversation,
     followUp,
     processEvent,
   };

@@ -18,6 +18,7 @@ const REWRITE_ACTIONS = [
   'confident',
   'friendly',
 ];
+const ASK_CONVERSATION_ACTION = 'ask_conversation';
 
 /**
  * Gets the event key suffix based on action type.
@@ -27,6 +28,7 @@ const REWRITE_ACTIONS = [
 function getEventPrefix(action) {
   if (action === 'summarize') return 'SUMMARIZE';
   if (action === 'reply_suggestion') return 'REPLY_SUGGESTION';
+  if (action === ASK_CONVERSATION_ACTION) return null;
   return 'REWRITE';
 }
 
@@ -74,8 +76,14 @@ function trackGenerationFailure({
  * @returns {Object} Copilot reply state and methods
  */
 export function useCopilotReply() {
-  const { processEvent, followUp, currentChat, captainEnabled } = useCaptain();
-  const { updateUISettings } = useUISettings();
+  const {
+    processEvent,
+    followUp,
+    currentChat,
+    captainTasksEnabled,
+    askConversation,
+  } = useCaptain();
+  useUISettings();
 
   const showEditor = ref(false);
   const isGenerating = ref(false);
@@ -93,11 +101,33 @@ export function useCopilotReply() {
 
   const isActive = computed(() => showEditor.value || isGenerating.value);
   const isButtonDisabled = computed(
-    () => isGenerating.value || !isContentReady.value
+    () => isGenerating.value || !isContentReady.value || !generatedContent.value
   );
   const editorTransitionKey = computed(() =>
     isActive.value ? 'copilot' : 'rich'
   );
+  const inputPlaceholder = computed(() =>
+    currentAction.value === ASK_CONVERSATION_ACTION && !generatedContent.value
+      ? 'Pergunte algo sobre esta conversa...'
+      : 'Peça um ajuste ou refine a resposta gerada...'
+  );
+
+  const trackActionEvent = (action, suffix, followUpCountValue = undefined) => {
+    const prefix = getEventPrefix(action);
+    if (!prefix) {
+      return;
+    }
+
+    const eventKey = `${prefix}_${suffix}`;
+    if (!CAPTAIN_EVENTS[eventKey]) {
+      return;
+    }
+
+    useTrack(
+      CAPTAIN_EVENTS[eventKey],
+      buildPayload(action, trackedConversationId.value, followUpCountValue)
+    );
+  };
 
   /**
    * Resets all copilot editor state and cancels any ongoing generation.
@@ -106,15 +136,7 @@ export function useCopilotReply() {
   function reset(trackDismiss = true) {
     // Track dismiss event if there was content and we're not accepting
     if (trackDismiss && generatedContent.value && currentAction.value) {
-      const eventKey = `${getEventPrefix(currentAction.value)}_DISMISSED`;
-      useTrack(
-        CAPTAIN_EVENTS[eventKey],
-        buildPayload(
-          currentAction.value,
-          trackedConversationId.value,
-          followUpCount.value
-        )
-      );
+      trackActionEvent(currentAction.value, 'DISMISSED', followUpCount.value);
     }
 
     if (abortController.value) {
@@ -151,14 +173,20 @@ export function useCopilotReply() {
    * @param {string} data - The content to process
    */
   async function execute(action, data) {
-    if (action === 'ask_copilot') {
-      if (!captainEnabled.value) {
+    if (action === ASK_CONVERSATION_ACTION) {
+      if (!captainTasksEnabled.value) {
         return;
       }
-      updateUISettings({
-        is_contact_sidebar_open: false,
-        is_copilot_panel_open: true,
-      });
+
+      reset(false);
+      showEditor.value = true;
+      isGenerating.value = false;
+      isContentReady.value = false;
+      generatedContent.value = '';
+      followUpContext.value = null;
+      currentAction.value = ASK_CONVERSATION_ACTION;
+      followUpCount.value = 0;
+      trackedConversationId.value = conversationId.value;
       return;
     }
 
@@ -193,12 +221,7 @@ export function useCopilotReply() {
       followUpContext.value = newContext;
       if (content) {
         showEditor.value = true;
-        // Track "Used" event on successful generation
-        const eventKey = `${getEventPrefix(action)}_USED`;
-        useTrack(
-          CAPTAIN_EVENTS[eventKey],
-          buildPayload(action, trackedConversationId.value)
-        );
+        trackActionEvent(action, 'USED');
       } else if (errorType && errorType !== CAPTAIN_ERROR_TYPES.ABORTED) {
         trackGenerationFailure({
           action,
@@ -242,29 +265,47 @@ export function useCopilotReply() {
    * @param {string} message - The follow-up message from the user
    */
   async function sendFollowUp(message) {
-    if (!followUpContext.value || !message.trim()) return;
+    if (!message.trim()) return;
 
     const requestController = new AbortController();
     abortController.value = requestController;
     isGenerating.value = true;
     isContentReady.value = false;
 
-    // Track follow-up sent event
-    useTrack(CAPTAIN_EVENTS.FOLLOW_UP_SENT, {
-      conversationId: trackedConversationId.value,
-    });
-    followUpCount.value += 1;
-
     try {
+      let result;
+
+      if (
+        !followUpContext.value &&
+        currentAction.value === ASK_CONVERSATION_ACTION
+      ) {
+        result = await askConversation({
+          message,
+          signal: requestController.signal,
+        });
+      } else {
+        if (!followUpContext.value) {
+          isGenerating.value = false;
+          return;
+        }
+
+        useTrack(CAPTAIN_EVENTS.FOLLOW_UP_SENT, {
+          conversationId: trackedConversationId.value,
+        });
+        followUpCount.value += 1;
+
+        result = await followUp({
+          followUpContext: followUpContext.value,
+          message,
+          signal: requestController.signal,
+        });
+      }
+
       const {
         message: content,
         followUpContext: updatedContext,
         errorType,
-      } = await followUp({
-        followUpContext: followUpContext.value,
-        message,
-        signal: requestController.signal,
-      });
+      } = result;
 
       if (requestController.signal.aborted) return;
       if (errorType === CAPTAIN_ERROR_TYPES.ABORTED) {
@@ -330,15 +371,7 @@ export function useCopilotReply() {
 
     // Track "Applied" event
     if (currentAction.value) {
-      const eventKey = `${getEventPrefix(currentAction.value)}_APPLIED`;
-      useTrack(
-        CAPTAIN_EVENTS[eventKey],
-        buildPayload(
-          currentAction.value,
-          trackedConversationId.value,
-          followUpCount.value
-        )
-      );
+      trackActionEvent(currentAction.value, 'APPLIED', followUpCount.value);
     }
 
     // Reset state without tracking dismiss
@@ -362,6 +395,7 @@ export function useCopilotReply() {
     isActive,
     isButtonDisabled,
     editorTransitionKey,
+    inputPlaceholder,
 
     reset,
     toggleEditor,

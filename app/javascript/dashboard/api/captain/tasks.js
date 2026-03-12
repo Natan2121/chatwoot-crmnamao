@@ -67,6 +67,25 @@ class TasksAPI extends ApiClient {
   }
 
   /**
+   * Asks a free-form question about the current conversation.
+   * @param {Object} options - The ask options.
+   * @param {string} options.message - The operator question.
+   * @param {string} options.conversationId - The conversation ID.
+   * @param {AbortSignal} [signal] - AbortSignal to cancel the request.
+   * @returns {Promise} A promise that resolves with the answer.
+   */
+  askConversation({ message, conversationId }, signal) {
+    return axios.post(
+      `${this.url}/ask_conversation`,
+      {
+        message,
+        conversation_display_id: conversationId,
+      },
+      { signal }
+    );
+  }
+
+  /**
    * Gets label suggestions for a conversation.
    * @param {string} conversationId - The conversation ID.
    * @param {AbortSignal} [signal] - AbortSignal to cancel the request.

@@ -1342,7 +1342,7 @@ export default {
           :is-generating-content="copilot.isGenerating.value"
           :generated-content="copilot.generatedContent.value"
           :is-popout="popOutReplyBox"
-          :placeholder="$t('CONVERSATION.FOOTER.COPILOT_MSG_INPUT')"
+          :placeholder="copilot.inputPlaceholder.value"
           @focus="onFocus"
           @blur="onBlur"
           @clear-selection="clearEditorSelection"

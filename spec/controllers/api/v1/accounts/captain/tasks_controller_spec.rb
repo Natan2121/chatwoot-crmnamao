@@ -71,4 +71,33 @@ RSpec.describe 'Api::V1::Accounts::Captain::Tasks', type: :request do
       expect(Captain::ReplySuggestionService).to have_received(:new)
     end
   end
+
+  describe 'POST /api/v1/accounts/{account.id}/captain/tasks/ask_conversation' do
+    let(:conversation_display_id) { 44 }
+    let(:question) { 'Qual foi a ultima mensagem do cliente?' }
+    let(:ask_service) { instance_double(Captain::AskConversationService, perform: { message: 'A ultima mensagem foi um teste do app.' }) }
+
+    before do
+      allow(Captain::AskConversationService).to receive(:new) do |**kwargs|
+        expect(kwargs[:account]).to eq(account)
+        expect(kwargs[:conversation_display_id].to_i).to eq(conversation_display_id)
+        expect(kwargs[:user_message]).to eq(question)
+        ask_service
+      end
+    end
+
+    it 'returns the contextual answer' do
+      post "/api/v1/accounts/#{account.id}/captain/tasks/ask_conversation",
+           headers: agent.create_new_auth_token,
+           params: {
+             conversation_display_id: conversation_display_id,
+             message: question,
+           },
+           as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(json_response).to eq('message' => 'A ultima mensagem foi um teste do app.')
+      expect(Captain::AskConversationService).to have_received(:new)
+    end
+  end
 end

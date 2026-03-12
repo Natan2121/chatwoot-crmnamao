@@ -3,22 +3,23 @@ import { useCopilotReply } from '../useCopilotReply';
 
 const mockProcessEvent = vi.fn();
 const mockFollowUp = vi.fn();
-const mockUpdateUISettings = vi.fn();
+const mockAskConversation = vi.fn();
 const currentChat = ref({ id: '737' });
-const captainEnabled = ref(false);
+const captainTasksEnabled = ref(false);
 
 vi.mock('dashboard/composables/useCaptain', () => ({
   useCaptain: () => ({
     processEvent: mockProcessEvent,
     followUp: mockFollowUp,
+    askConversation: mockAskConversation,
     currentChat,
-    captainEnabled,
+    captainTasksEnabled,
   }),
 }));
 
 vi.mock('dashboard/composables/useUISettings', () => ({
   useUISettings: () => ({
-    updateUISettings: mockUpdateUISettings,
+    updateUISettings: vi.fn(),
   }),
 }));
 
@@ -45,29 +46,77 @@ vi.mock('dashboard/helper/AnalyticsHelper/events', () => ({
 describe('useCopilotReply', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    captainEnabled.value = false;
+    captainTasksEnabled.value = false;
     currentChat.value = { id: '737' };
   });
 
-  it('does not open copilot when captain integration is disabled', async () => {
+  it('does not abrir o fluxo de pergunta quando captain_tasks esta desabilitado', async () => {
     const { execute } = useCopilotReply();
 
-    await execute('ask_copilot');
+    await execute('ask_conversation');
     await nextTick();
 
-    expect(mockUpdateUISettings).not.toHaveBeenCalled();
+    expect(mockAskConversation).not.toHaveBeenCalled();
     expect(mockProcessEvent).not.toHaveBeenCalled();
   });
 
-  it('opens copilot panel when captain integration is enabled', async () => {
-    captainEnabled.value = true;
-    const { execute } = useCopilotReply();
+  it('abre o editor inline para perguntar sobre a conversa', async () => {
+    captainTasksEnabled.value = true;
+    const { execute, showEditor, generatedContent, isButtonDisabled } =
+      useCopilotReply();
 
-    await execute('ask_copilot');
+    await execute('ask_conversation');
+    await nextTick();
 
-    expect(mockUpdateUISettings).toHaveBeenCalledWith({
-      is_contact_sidebar_open: false,
-      is_copilot_panel_open: true,
+    expect(showEditor.value).toBe(true);
+    expect(generatedContent.value).toBe('');
+    expect(isButtonDisabled.value).toBe(true);
+  });
+
+  it('usa askConversation no primeiro envio e followUp nas refinacoes', async () => {
+    captainTasksEnabled.value = true;
+    mockAskConversation.mockResolvedValue({
+      message: 'A ultima mensagem do cliente foi um teste.',
+      followUpContext: {
+        event_name: 'ask_conversation',
+        original_context: 'contexto',
+        last_response: 'A ultima mensagem do cliente foi um teste.',
+        conversation_history: [],
+      },
+    });
+    mockFollowUp.mockResolvedValue({
+      message: 'Resposta refinada',
+      followUpContext: {
+        event_name: 'ask_conversation',
+        original_context: 'contexto',
+        last_response: 'Resposta refinada',
+        conversation_history: [],
+      },
+    });
+
+    const { execute, sendFollowUp, generatedContent, followUpContext } =
+      useCopilotReply();
+
+    await execute('ask_conversation');
+    await sendFollowUp('Qual foi a ultima mensagem do cliente?');
+
+    expect(mockAskConversation).toHaveBeenCalledWith({
+      message: 'Qual foi a ultima mensagem do cliente?',
+      signal: expect.any(AbortSignal),
+    });
+    expect(generatedContent.value).toBe(
+      'A ultima mensagem do cliente foi um teste.'
+    );
+    expect(followUpContext.value?.event_name).toBe('ask_conversation');
+
+    await sendFollowUp('Agora resuma em uma frase.');
+
+    expect(mockFollowUp).toHaveBeenCalledWith({
+      followUpContext: expect.objectContaining({
+        event_name: 'ask_conversation',
+      }),
+      message: 'Agora resuma em uma frase.',
+      signal: expect.any(AbortSignal),
     });
   });
 });

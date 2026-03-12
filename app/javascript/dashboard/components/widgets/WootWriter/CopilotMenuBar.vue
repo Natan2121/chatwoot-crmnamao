@@ -21,7 +21,7 @@ const emit = defineEmits(['executeCopilotAction']);
 
 const { t } = useI18n();
 
-const { draftMessage, captainEnabled } = useCaptain();
+const { draftMessage, captainTasksEnabled } = useCaptain();
 
 const replyMode = useMapGetter('draftMessages/getReplyEditorMode');
 
@@ -119,10 +119,10 @@ const generalMenuItems = computed(() => {
     icon: 'i-fluent-text-bullet-list-square-sparkle-32-regular',
   });
 
-  if (captainEnabled.value) {
+  if (captainTasksEnabled.value) {
     items.push({
-      label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.ASK_COPILOT'),
-      key: 'ask_copilot',
+      label: 'Perguntar sobre esta conversa',
+      key: 'ask_conversation',
       icon: 'i-fluent-circle-sparkle-24-regular',
     });
   }
