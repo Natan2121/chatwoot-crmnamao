@@ -11,6 +11,10 @@ class Captain::TasksPolicy < ApplicationPolicy
     true
   end
 
+  def ask_conversation?
+    true
+  end
+
   def label_suggestion?
     true
   end
