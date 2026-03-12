@@ -12,6 +12,8 @@ import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
 import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
 import { useInbox } from 'dashboard/composables/useInbox';
+import { useUISettings } from 'dashboard/composables/useUISettings';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
@@ -23,6 +25,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const { t } = useI18n();
@@ -31,6 +37,7 @@ const route = useRoute();
 const conversationHeader = ref(null);
 const { width } = useElementSize(conversationHeader);
 const { isAWebWidgetInbox } = useInbox();
+const { uiSettings } = useUISettings();
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 const accountId = computed(() => store.getters.getCurrentAccountId);
@@ -85,6 +92,13 @@ const inbox = computed(() => {
   return store.getters['inboxes/getInbox'](inboxId);
 });
 
+const useWhatsAppLayout = computed(() => {
+  return (
+    props.isWhatsAppLayout ||
+    shouldUseWhatsAppConversationLayout(uiSettings.value, inbox.value)
+  );
+});
+
 const hasMultipleInboxes = computed(
   () => store.getters['inboxes/getInboxes'].length > 1
 );
@@ -95,10 +109,18 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
 <template>
   <div
     ref="conversationHeader"
-    class="flex flex-col gap-3 items-center justify-between flex-1 w-full min-w-0 xl:flex-row px-3 pt-3 pb-2 h-24 xl:h-12"
+    class="flex flex-1 w-full min-w-0 items-center justify-between"
+    :class="
+      useWhatsAppLayout
+        ? 'gap-3 border-b border-[#d1d7db] bg-[#f0f2f5] px-4 py-3 h-16'
+        : 'flex-col gap-3 xl:flex-row px-3 pt-3 pb-2 h-24 xl:h-12'
+    "
   >
     <div
-      class="flex items-center justify-start w-full xl:w-auto max-w-full min-w-0 xl:flex-1"
+      class="flex items-center justify-start max-w-full min-w-0"
+      :class="
+        useWhatsAppLayout ? 'flex-1 w-auto' : 'w-full xl:w-auto xl:flex-1'
+      "
     >
       <BackButton
         v-if="showBackButton"
@@ -108,17 +130,22 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
       <Avatar
         :name="currentContact.name"
         :src="currentContact.thumbnail"
-        :size="32"
+        :size="useWhatsAppLayout ? 40 : 32"
         :status="currentContact.availability_status"
         hide-offline-status
         rounded-full
       />
       <div
-        class="flex flex-col items-start min-w-0 ml-2 overflow-hidden rtl:ml-0 rtl:mr-2"
+        class="flex min-w-0 flex-col items-start overflow-hidden ml-3 rtl:ml-0 rtl:mr-3"
       >
         <div class="flex flex-row items-center max-w-full gap-1 p-0 m-0">
           <span
-            class="text-sm font-medium truncate leading-tight text-n-slate-12"
+            class="truncate leading-tight"
+            :class="
+              useWhatsAppLayout
+                ? 'text-[15px] font-medium text-[#111b21]'
+                : 'text-sm font-medium text-n-slate-12'
+            "
           >
             {{ currentContact.name }}
           </span>
@@ -132,7 +159,8 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
         </div>
 
         <div
-          class="flex items-center gap-2 overflow-hidden text-xs conversation--header--actions text-ellipsis whitespace-nowrap"
+          class="flex items-center gap-2 overflow-hidden conversation--header--actions text-ellipsis whitespace-nowrap"
+          :class="useWhatsAppLayout ? 'text-[12px] text-[#667781]' : 'text-xs'"
         >
           <InboxName v-if="hasMultipleInboxes" :inbox="inbox" class="!mx-0" />
           <span v-if="isSnoozed" class="font-medium text-n-amber-10">
@@ -142,7 +170,12 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
       </div>
     </div>
     <div
-      class="flex flex-row items-center justify-start xl:justify-end flex-shrink-0 gap-2 w-full xl:w-auto header-actions-wrap"
+      class="flex flex-row items-center gap-2 flex-shrink-0 header-actions-wrap"
+      :class="
+        useWhatsAppLayout
+          ? 'justify-end w-auto'
+          : 'justify-start xl:justify-end w-full xl:w-auto'
+      "
     >
       <SLACardLabel
         v-if="hasSlaPolicyId"
@@ -151,7 +184,26 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
         :parent-width="width"
         class="hidden md:flex"
       />
-      <MoreActions :conversation-id="currentChat.id" />
+      <MoreActions
+        :conversation-id="currentChat.id"
+        :is-whats-app-layout="useWhatsAppLayout"
+      />
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.header-actions-wrap {
+  &.justify-end {
+    :deep(button) {
+      @apply rounded-full border-0 text-[#54656f];
+      background-color: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+    }
+
+    :deep(button:hover) {
+      background-color: #ffffff;
+    }
+  }
+}
+</style>

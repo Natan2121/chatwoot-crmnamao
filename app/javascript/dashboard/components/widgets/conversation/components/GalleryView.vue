@@ -22,6 +22,10 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['close']);
@@ -107,6 +111,56 @@ const fileNameFromDataUrl = computed(() => {
   return fileName ? decodeURIComponent(fileName) : '';
 });
 
+const modalShellClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'bg-[#111b21] text-[#e9edef]'
+    : 'bg-n-background';
+});
+
+const headerClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'bg-[#202c33] border-[#2a3942]'
+    : 'bg-n-background border-n-weak';
+});
+
+const titleTextClass = computed(() => {
+  return props.isWhatsAppLayout ? 'text-[#e9edef]' : 'text-n-slate-12';
+});
+
+const subtitleTextClass = computed(() => {
+  return props.isWhatsAppLayout ? 'text-[#8696a0]' : 'text-n-slate-11';
+});
+
+const actionButtonClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? '!rounded-full !border-0 !bg-white/10 !text-[#e9edef] hover:!bg-white/20'
+    : '';
+});
+
+const navButtonClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? '!rounded-full !border-0 !bg-white/10 !text-[#e9edef] hover:!bg-white/20'
+    : '';
+});
+
+const footerClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'border-[#2a3942] bg-[#202c33]'
+    : 'border-n-weak';
+});
+
+const counterClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'bg-[#2a3942] text-[#e9edef]'
+    : 'bg-n-slate-3 text-n-slate-12';
+});
+
+const audioPanelClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'rounded-[22px] border border-[#2a3942] bg-[#202c33] p-4 shadow-[0_20px_40px_rgba(0,0,0,0.28)]'
+    : '';
+});
+
 const onClose = () => emit('close');
 
 const setImageAndVideoSrc = attachment => {
@@ -175,11 +229,13 @@ onMounted(() => {
       :on-close="onClose"
     >
       <div
-        class="bg-n-background flex flex-col h-[inherit] w-[inherit] overflow-hidden select-none"
+        class="flex flex-col h-[inherit] w-[inherit] overflow-hidden select-none"
+        :class="modalShellClass"
         @click="onClose"
       >
         <header
-          class="z-10 flex items-center justify-between w-full h-16 px-6 py-2 bg-n-background border-b border-n-weak"
+          class="z-10 flex items-center justify-between w-full h-16 px-6 py-2 border-b"
+          :class="headerClass"
           @click.stop
         >
           <div
@@ -197,13 +253,15 @@ onMounted(() => {
             <div class="flex flex-col ml-2 rtl:ml-0 rtl:mr-2 overflow-hidden">
               <h3 class="text-base leading-5 m-0 font-medium">
                 <span
-                  class="overflow-hidden text-n-slate-12 whitespace-nowrap text-ellipsis"
+                  class="overflow-hidden whitespace-nowrap text-ellipsis"
+                  :class="titleTextClass"
                 >
                   {{ senderDetails.name }}
                 </span>
               </h3>
               <span
-                class="text-xs text-n-slate-11 whitespace-nowrap text-ellipsis"
+                class="text-xs whitespace-nowrap text-ellipsis"
+                :class="subtitleTextClass"
               >
                 {{ readableTime }}
               </span>
@@ -211,7 +269,8 @@ onMounted(() => {
           </div>
 
           <div
-            class="flex-1 mx-2 px-2 truncate text-sm font-medium text-center text-n-slate-12"
+            class="flex-1 mx-2 px-2 truncate text-sm font-medium text-center"
+            :class="titleTextClass"
           >
             <span v-dompurify-html="fileNameFromDataUrl" class="truncate" />
           </div>
@@ -222,6 +281,7 @@ onMounted(() => {
               icon="i-lucide-zoom-in"
               slate
               ghost
+              :class="actionButtonClass"
               @click="onZoom(0.1)"
             />
             <NextButton
@@ -229,6 +289,7 @@ onMounted(() => {
               icon="i-lucide-zoom-out"
               slate
               ghost
+              :class="actionButtonClass"
               @click="onZoom(-0.1)"
             />
             <NextButton
@@ -236,6 +297,7 @@ onMounted(() => {
               icon="i-lucide-rotate-ccw"
               slate
               ghost
+              :class="actionButtonClass"
               @click="onRotate('counter-clockwise')"
             />
             <NextButton
@@ -243,17 +305,25 @@ onMounted(() => {
               icon="i-lucide-rotate-cw"
               slate
               ghost
+              :class="actionButtonClass"
               @click="onRotate('clockwise')"
             />
             <NextButton
               icon="i-lucide-download"
               slate
               ghost
+              :class="actionButtonClass"
               :is-loading="isDownloading"
               :disabled="isDownloading"
               @click="onClickDownload"
             />
-            <NextButton icon="i-lucide-x" slate ghost @click="onClose" />
+            <NextButton
+              icon="i-lucide-x"
+              slate
+              ghost
+              :class="actionButtonClass"
+              @click="onClose"
+            />
           </div>
         </header>
 
@@ -266,6 +336,7 @@ onMounted(() => {
               blue
               faded
               lg
+              :class="navButtonClass"
               :disabled="activeImageIndex === 0"
               @click.stop="
                 onClickChangeAttachment(
@@ -318,6 +389,7 @@ onMounted(() => {
               :key="activeAttachment.message_id"
               controls
               class="w-full max-w-md"
+              :class="audioPanelClass"
               @click.stop
             >
               <source :src="`${activeAttachment.data_url}?t=${Date.now()}`" />
@@ -332,6 +404,7 @@ onMounted(() => {
               blue
               faded
               lg
+              :class="navButtonClass"
               :disabled="activeImageIndex === allAttachments.length - 1"
               @click.stop="
                 onClickChangeAttachment(
@@ -344,10 +417,12 @@ onMounted(() => {
         </main>
 
         <footer
-          class="z-10 flex items-center justify-center h-12 border-t border-n-weak"
+          class="z-10 flex items-center justify-center h-12 border-t"
+          :class="footerClass"
         >
           <div
-            class="rounded-md flex items-center justify-center px-3 py-1 bg-n-slate-3 text-n-slate-12 text-sm font-medium"
+            class="rounded-md flex items-center justify-center px-3 py-1 text-sm font-medium"
+            :class="counterClass"
           >
             {{ `${activeImageIndex + 1} / ${allAttachments.length}` }}
           </div>

@@ -17,6 +17,13 @@ import {
 } from 'dashboard/helper/commandbar/events';
 
 // No props needed as we're getting currentChat from the store directly
+defineProps({
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const store = useStore();
 const { t } = useI18n();
 
@@ -91,10 +98,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="relative flex items-center gap-2 actions--container">
+  <div
+    class="relative flex items-center gap-2 actions--container"
+    :class="{ 'actions--container-whatsapp': isWhatsAppLayout }"
+  >
     <ResolveAction
       :conversation-id="currentChat.id"
       :status="currentChat.status"
+      :is-whats-app-layout="isWhatsAppLayout"
     />
     <div
       v-on-clickaway="() => toggleDropdown(false)"
@@ -106,13 +117,18 @@ onUnmounted(() => {
         variant="ghost"
         color="slate"
         icon="i-lucide-more-vertical"
-        class="rounded-md group-hover:bg-n-alpha-2"
+        :class="
+          isWhatsAppLayout
+            ? 'rounded-full group-hover:bg-white'
+            : 'rounded-md group-hover:bg-n-alpha-2'
+        "
         @click="toggleDropdown()"
       />
       <DropdownMenu
         v-if="showActionsDropdown"
         :menu-items="actionMenuItems"
         class="mt-1 ltr:right-0 rtl:left-0 top-full"
+        :class="isWhatsAppLayout ? 'whatsapp-actions-dropdown' : ''"
         @action="handleActionClick"
       />
     </div>
@@ -124,3 +140,24 @@ onUnmounted(() => {
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.actions--container-whatsapp {
+  :deep(button) {
+    @apply border-0 text-[#54656f];
+    background-color: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+  }
+
+  :deep(button:hover) {
+    background-color: #ffffff;
+  }
+}
+
+.whatsapp-actions-dropdown {
+  :deep([role='menu']) {
+    @apply rounded-2xl border border-[#d1d7db] bg-white p-1.5;
+    box-shadow: 0 8px 24px rgba(17, 27, 33, 0.14);
+  }
+}
+</style>

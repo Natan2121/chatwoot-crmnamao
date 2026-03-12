@@ -8,6 +8,7 @@ import { useTrack } from 'dashboard/composables';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import keyboardEventListenerMixins from 'shared/mixins/keyboardEventListenerMixins';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 
 import ReplyToMessage from './ReplyToMessage.vue';
 import AttachmentPreview from 'dashboard/components/widgets/AttachmentsPreview.vue';
@@ -308,7 +309,11 @@ export default {
       return {
         'is-private': this.isPrivate,
         'is-focused': this.isFocused || this.hasAttachments,
+        'is-whatsapp-layout': this.isWhatsAppLayout,
       };
+    },
+    isWhatsAppLayout() {
+      return shouldUseWhatsAppConversationLayout(this.uiSettings, this.inbox);
     },
     hasAttachments() {
       return this.attachedFiles.length;
@@ -1278,6 +1283,7 @@ export default {
       :mode="replyType"
       :conversation-id="conversationId"
       :is-reply-restricted="isReplyRestricted"
+      :is-whats-app-layout="isWhatsAppLayout"
       :disabled="
         (copilot.isActive.value && copilot.isButtonDisabled.value) ||
         showAudioRecorderEditor
@@ -1310,6 +1316,7 @@ export default {
         <ReplyToMessage
           v-if="shouldShowReplyToMessage"
           :message="inReplyTo"
+          :is-whats-app-layout="isWhatsAppLayout"
           @dismiss="resetReplyToMessage"
         />
         <EmojiInput
@@ -1355,7 +1362,8 @@ export default {
           v-model="message"
           :conversation-id="conversationId"
           :editor-id="editorStateId"
-          class="input popover-prosemirror-menu"
+          class="input popover-prosemirror-menu reply-box__editor"
+          :class="{ 'reply-box__editor--whatsapp': isWhatsAppLayout }"
           :is-private="isOnPrivateNote"
           :placeholder="messagePlaceHolder"
           :update-selection-with="updateEditorSelectionWith"
@@ -1510,6 +1518,11 @@ export default {
   &.is-private {
     @apply bg-n-solid-amber dark:border-n-amber-3/10 border-n-amber-12/5;
   }
+
+  &.is-whatsapp-layout {
+    @apply mb-0 mx-4 rounded-3xl border-transparent bg-white;
+    box-shadow: 0 1px 1px rgba(11, 20, 26, 0.08);
+  }
 }
 
 .send-button {
@@ -1518,6 +1531,104 @@ export default {
 
 .reply-box__top {
   @apply relative py-0 px-4 -mt-px;
+}
+
+.reply-box.is-whatsapp-layout .reply-box__top {
+  @apply px-5 pt-1;
+}
+
+.reply-box.is-whatsapp-layout {
+  :deep(.reply-box__editor--whatsapp) {
+    @apply pb-1;
+  }
+
+  :deep(.reply-box__editor--whatsapp .signature-preview) {
+    @apply rounded-2xl border border-[#e9edef] bg-[#f7f8fa] px-3 py-2;
+  }
+
+  :deep(.reply-box__editor--whatsapp .signature-preview--top) {
+    @apply mb-3 border-b-0;
+  }
+
+  :deep(.reply-box__editor--whatsapp .signature-preview--bottom) {
+    @apply mt-3 border-t-0;
+  }
+
+  :deep(.reply-box__editor--whatsapp .signature-label) {
+    @apply mb-1 text-[11px] font-medium uppercase tracking-[0.04em] text-[#667781];
+  }
+
+  :deep(.reply-box__editor--whatsapp .signature-content) {
+    @apply text-[13px] leading-5 text-[#54656f];
+  }
+
+  :deep(.reply-box__editor--whatsapp .ProseMirror-menubar-wrapper) {
+    @apply gap-2;
+  }
+
+  :deep(.reply-box__editor--whatsapp .ProseMirror-menubar) {
+    @apply rounded-2xl border border-[#e9edef] bg-[#f7f8fa] px-3 py-2;
+    min-height: 2.5rem !important;
+    left: 0 !important;
+    right: auto !important;
+  }
+
+  :deep(
+      .reply-box__editor--whatsapp .ProseMirror-menubar .ProseMirror-menuitem
+    ) {
+    @apply size-7 rounded-full;
+  }
+
+  :deep(
+      .reply-box__editor--whatsapp
+        .ProseMirror-menubar
+        .ProseMirror-menuitem:hover
+    ) {
+    background-color: #ffffff;
+  }
+
+  :deep(
+      .reply-box__editor--whatsapp .ProseMirror-menubar .ProseMirror-menu-active
+    ) {
+    @apply bg-white;
+  }
+
+  :deep(
+      .reply-box__editor--whatsapp > .ProseMirror-menubar-wrapper > .ProseMirror
+    ) {
+    @apply rounded-[1.75rem] bg-transparent px-1 pb-1 pt-0 text-[15px] leading-6 text-[#111b21];
+  }
+
+  :deep(.reply-box__editor--whatsapp .ProseMirror-woot-style) {
+    @apply min-h-[3.75rem] max-h-[11rem] px-2 py-2;
+  }
+
+  :deep(.reply-box__editor--whatsapp .ProseMirror p),
+  :deep(.reply-box__editor--whatsapp .ProseMirror li),
+  :deep(.reply-box__editor--whatsapp .ProseMirror blockquote p) {
+    @apply text-[15px] leading-6 text-[#111b21];
+  }
+
+  :deep(
+      .reply-box__editor--whatsapp
+        .ProseMirror
+        p.is-editor-empty:first-child::before
+    ) {
+    color: #8696a0;
+  }
+
+  :deep(.reply-box__editor--whatsapp .prosemirror-mention-node) {
+    @apply rounded-md bg-[#e7f0ff] px-1.5 py-0.5 font-medium text-[#005c4b];
+  }
+
+  :deep(
+      .reply-box__editor--whatsapp
+        .popover-prosemirror-menu.has-selection
+        .ProseMirror-menubar
+    ) {
+    @apply rounded-2xl border-[#d1d7db] bg-white;
+    top: calc(var(--selection-top) - 0.5rem);
+  }
 }
 
 .emoji-dialog {

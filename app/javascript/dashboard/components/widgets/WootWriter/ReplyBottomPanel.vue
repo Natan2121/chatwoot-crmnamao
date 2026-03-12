@@ -10,6 +10,7 @@ import { getAllowedFileTypesByChannel } from '@chatwoot/utils';
 import { ALLOWED_FILE_TYPES } from 'shared/constants/messages';
 import VideoCallButton from '../VideoCallButton.vue';
 import { INBOX_TYPES } from 'dashboard/helper/inbox';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 import { mapGetters } from 'vuex';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import DropdownContainer from 'next/dropdown-menu/base/DropdownContainer.vue';
@@ -152,8 +153,11 @@ export default {
     'scheduleMessage',
   ],
   setup(props) {
-    const { setSignatureFlagForInbox, fetchSignatureFlagFromUISettings } =
-      useUISettings();
+    const {
+      uiSettings,
+      setSignatureFlagForInbox,
+      fetchSignatureFlagFromUISettings,
+    } = useUISettings();
 
     const uploadRef = ref(false);
 
@@ -179,6 +183,7 @@ export default {
     useKeyboardEvents(keyboardEvents);
 
     return {
+      uiSettings,
       setSignatureFlagForInbox,
       fetchSignatureFlagFromUISettings,
       uploadRef,
@@ -198,7 +203,11 @@ export default {
     wrapClass() {
       return {
         'is-note-mode': this.isNote,
+        'is-whatsapp-layout': this.isWhatsAppLayout,
       };
+    },
+    isWhatsAppLayout() {
+      return shouldUseWhatsAppConversationLayout(this.uiSettings, this.inbox);
     },
     showAttachButton() {
       if (this.isEditorDisabled) return false;
@@ -285,6 +294,13 @@ export default {
       return this.quotedReplyEnabled
         ? this.$t('CONVERSATION.REPLYBOX.QUOTED_REPLY.DISABLE_TOOLTIP')
         : this.$t('CONVERSATION.REPLYBOX.QUOTED_REPLY.ENABLE_TOOLTIP');
+    },
+    sendButtonColor() {
+      if (this.isNote) {
+        return 'amber';
+      }
+
+      return this.isWhatsAppLayout ? 'teal' : 'blue';
     },
   },
   mounted() {
@@ -430,9 +446,14 @@ export default {
           :label="sendButtonText"
           type="submit"
           sm
-          blue
+          :color="sendButtonColor"
           :disabled="isSendDisabled"
-          class="flex-shrink-0 !rounded-r-none"
+          class="flex-shrink-0"
+          :class="
+            isWhatsAppLayout
+              ? '!rounded-l-full !rounded-r-none !bg-[#00a884] px-4 hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
+              : '!rounded-r-none'
+          "
           @click="onSend"
         />
         <DropdownContainer>
@@ -440,11 +461,16 @@ export default {
             <NextButton
               type="button"
               sm
-              blue
+              :color="sendButtonColor"
               icon="i-lucide-chevron-down"
               :disabled="isSendDisabled"
-              class="flex-shrink-0 !rounded-l-none !border-l border-l-white/20 !px-1.5"
-              :class="{ 'bg-n-blue-11': isOpen }"
+              class="flex-shrink-0 !border-l border-l-white/20 !px-1.5"
+              :class="[
+                isWhatsAppLayout
+                  ? '!rounded-r-full !rounded-l-none !bg-[#00a884] hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
+                  : '!rounded-l-none',
+                { 'bg-n-blue-11': isOpen },
+              ]"
               @click="toggle"
             />
           </template>
@@ -464,9 +490,14 @@ export default {
         :label="sendButtonText"
         type="submit"
         sm
-        :color="isNote ? 'amber' : 'blue'"
+        :color="sendButtonColor"
         :disabled="isSendDisabled"
         class="flex-shrink-0"
+        :class="
+          isWhatsAppLayout
+            ? '!rounded-full !bg-[#00a884] px-4 hover:enabled:!bg-[#008f72] focus-visible:!bg-[#008f72]'
+            : ''
+        "
         @click="onSend"
       />
     </div>
@@ -480,6 +511,22 @@ export default {
 
 .right-wrap {
   @apply flex;
+}
+
+.is-whatsapp-layout {
+  @apply px-4 py-2;
+
+  .left-wrap {
+    @apply gap-1.5;
+  }
+
+  .right-wrap {
+    @apply items-center;
+  }
+
+  :deep(button) {
+    @apply rounded-full;
+  }
 }
 
 ::v-deep .file-uploads {

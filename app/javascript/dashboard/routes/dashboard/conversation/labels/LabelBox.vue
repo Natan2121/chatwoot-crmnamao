@@ -14,6 +14,12 @@ export default {
     LabelDropdown,
     AddLabel,
   },
+  props: {
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
+  },
   setup() {
     const { isAdmin } = useAdmin();
 
@@ -79,7 +85,10 @@ export default {
 </script>
 
 <template>
-  <div class="sidebar-labels-wrap">
+  <div
+    class="sidebar-labels-wrap"
+    :class="isWhatsAppLayout ? 'sidebar-labels-wrap--whatsapp' : ''"
+  >
     <div
       v-if="!conversationUiFlags.isFetching"
       class="contact-conversation--list"
@@ -89,7 +98,11 @@ export default {
         class="label-wrap flex flex-wrap"
         @keyup.esc="closeDropdownLabel"
       >
-        <AddLabel @add="toggleLabels" />
+        <AddLabel
+          class="sidebar-labels-wrap__add"
+          :is-whats-app-layout="isWhatsAppLayout"
+          @add="toggleLabels"
+        />
         <woot-label
           v-for="label in activeLabels"
           :key="label.id"
@@ -103,17 +116,23 @@ export default {
         />
 
         <div
-          :class="{
-            'block visible': showSearchDropdownLabel,
-            'hidden invisible': !showSearchDropdownLabel,
-          }"
-          class="border rounded-lg bg-n-alpha-3 top-6 backdrop-blur-[100px] absolute w-full shadow-lg border-n-strong dark:border-n-strong p-2 box-border z-[9999]"
+          class="top-6 absolute w-full p-2 box-border z-[9999]"
+          :class="[
+            {
+              'block visible': showSearchDropdownLabel,
+              'hidden invisible': !showSearchDropdownLabel,
+            },
+            isWhatsAppLayout
+              ? 'rounded-2xl border border-[#dfe5e7] bg-white shadow-[0_12px_32px_rgba(17,27,33,0.12)]'
+              : 'border rounded-lg bg-n-alpha-3 backdrop-blur-[100px] shadow-lg border-n-strong dark:border-n-strong',
+          ]"
         >
           <LabelDropdown
             v-if="showSearchDropdownLabel"
             :account-labels="accountLabels"
             :selected-labels="savedLabels"
             :allow-creation="isAdmin"
+            :is-whats-app-layout="isWhatsAppLayout"
             @add="addLabelToConversation"
             @remove="removeLabelFromConversation"
           />
@@ -134,6 +153,24 @@ export default {
   .label-wrap {
     line-height: 1.5rem;
     position: relative;
+  }
+}
+
+.sidebar-labels-wrap--whatsapp {
+  :deep(.sidebar-labels-wrap__add button) {
+    @apply rounded-full border-0 text-[#54656f];
+    background-color: #ffffff;
+  }
+
+  :deep(.sidebar-labels-wrap__add button:hover) {
+    background-color: #f0f2f5;
+  }
+
+  :deep(.woot-label) {
+    border-color: #dfe5e7 !important;
+    background-color: #ffffff !important;
+    color: #111b21 !important;
+    border-radius: 9999px !important;
   }
 }
 </style>

@@ -6,6 +6,7 @@ import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useAlert } from 'dashboard/composables';
+import { useUISettings } from 'dashboard/composables/useUISettings';
 
 // components
 import ReplyBox from './ReplyBox.vue';
@@ -24,6 +25,7 @@ import inboxMixin, { INBOX_FEATURES } from 'shared/mixins/inboxMixin';
 import { emitter } from 'shared/helpers/mitt';
 import { getTypingUsersText } from '../../../helper/commons';
 import { calculateScrollTop } from './helpers/scrollTopCalculationHelper';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import {
   filterDuplicateSourceMessages,
@@ -51,6 +53,7 @@ export default {
   mixins: [inboxMixin],
   setup() {
     const { isAdmin } = useAdmin();
+    const { uiSettings } = useUISettings();
     const isPopOutReplyBox = ref(false);
     const conversationPanelRef = ref(null);
 
@@ -79,6 +82,7 @@ export default {
       isLabelSuggestionFeatureEnabled,
       conversationPanelRef,
       isAdmin,
+      uiSettings,
     };
   },
   data() {
@@ -103,6 +107,12 @@ export default {
     }),
     currentInbox() {
       return this.$store.getters['inboxes/getInbox'](this.currentChat.inbox_id);
+    },
+    isWhatsAppLayout() {
+      return shouldUseWhatsAppConversationLayout(
+        this.uiSettings,
+        this.currentInbox
+      );
     },
     isOpen() {
       return this.currentChat?.status === wootConstants.STATUS_TYPE.OPEN;
@@ -490,7 +500,10 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col justify-between flex-grow h-full min-w-0 m-0">
+  <div
+    class="flex flex-col justify-between flex-grow h-full min-w-0 m-0"
+    :class="{ 'messages-view--whatsapp': isWhatsAppLayout }"
+  >
     <template v-if="isAWhatsAppBaileysChannel || isAWhatsAppZapiChannel">
       <WhatsappLinkDeviceModal
         v-if="showLinkDeviceModal"
@@ -543,6 +556,7 @@ export default {
       :current-user-id="currentUserId"
       :first-unread-id="unReadMessages[0]?.id"
       :is-an-email-channel="isAnEmailChannel"
+      :is-whats-app-layout="isWhatsAppLayout"
       :inbox-supports-reply-to="inboxSupportsReplyTo"
       :inbox-supports-edit="inboxSupportsEdit"
       :messages="getMessages"
@@ -563,11 +577,29 @@ export default {
           v-show="unreadMessageCount != 0"
           class="list-none flex justify-center items-center"
         >
-          <span
-            class="shadow-lg rounded-full bg-n-brand text-white text-xs font-medium my-2.5 mx-auto px-2.5 py-1.5"
+          <div
+            :class="
+              isWhatsAppLayout
+                ? 'my-3 flex w-full items-center gap-3 px-2'
+                : 'my-2.5'
+            "
           >
-            {{ unreadMessageLabel }}
-          </span>
+            <template v-if="isWhatsAppLayout">
+              <span class="h-px flex-1 bg-[#d1d7db]" />
+              <span
+                class="rounded-full bg-white/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#54656f] shadow-[0_1px_2px_rgba(11,20,26,0.12)]"
+              >
+                {{ unreadMessageLabel }}
+              </span>
+              <span class="h-px flex-1 bg-[#d1d7db]" />
+            </template>
+            <span
+              v-else
+              class="mx-auto rounded-full bg-n-brand px-2.5 py-1.5 text-xs font-medium text-white shadow-lg"
+            >
+              {{ unreadMessageLabel }}
+            </span>
+          </div>
         </li>
       </template>
       <template #after>
@@ -584,6 +616,8 @@ export default {
       :class="{
         'modal-mask': isPopOutReplyBox,
         'bg-n-surface-1': !isPopOutReplyBox,
+        'bg-[#f0f2f5] border-t border-[#d1d7db] pb-3 pt-2':
+          !isPopOutReplyBox && isWhatsAppLayout,
       }"
     >
       <div
@@ -591,7 +625,12 @@ export default {
         class="absolute flex items-center w-full h-0 -top-7"
       >
         <div
-          class="flex py-2 pr-4 pl-5 shadow-md rounded-full bg-white dark:bg-n-solid-3 text-n-slate-11 text-xs font-semibold my-2.5 mx-auto"
+          class="flex py-2 pr-4 pl-5 rounded-full text-xs font-semibold my-2.5 mx-auto"
+          :class="
+            isWhatsAppLayout
+              ? 'bg-white/95 text-[#54656f] shadow-[0_1px_2px_rgba(11,20,26,0.12)]'
+              : 'shadow-md bg-white dark:bg-n-solid-3 text-n-slate-11'
+          "
         >
           {{ typingUserNames }}
           <img
@@ -610,6 +649,21 @@ export default {
 </template>
 
 <style scoped lang="scss">
+.messages-view--whatsapp {
+  background-color: #efeae2;
+  background-image: radial-gradient(
+      circle at 25px 25px,
+      rgba(255, 255, 255, 0.35) 2px,
+      transparent 0
+    ),
+    radial-gradient(
+      circle at 75px 75px,
+      rgba(17, 27, 33, 0.04) 2px,
+      transparent 0
+    );
+  background-size: 100px 100px;
+}
+
 .modal-mask {
   @apply fixed;
 

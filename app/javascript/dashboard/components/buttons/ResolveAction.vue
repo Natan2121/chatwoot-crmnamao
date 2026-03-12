@@ -20,6 +20,13 @@ import ButtonGroup from 'dashboard/components-next/buttonGroup/ButtonGroup.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import ConversationResolveAttributesModal from 'dashboard/components-next/ConversationWorkflow/ConversationResolveAttributesModal.vue';
 
+const props = defineProps({
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
+});
+
 const store = useStore();
 const getters = useStoreGetters();
 const { t } = useI18n();
@@ -171,10 +178,16 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
 </script>
 
 <template>
-  <div class="flex relative justify-end items-center resolve-actions">
+  <div
+    class="flex relative justify-end items-center resolve-actions"
+    :class="{ 'resolve-actions--whatsapp': props.isWhatsAppLayout }"
+  >
     <ButtonGroup
-      class="flex-shrink-0 rounded-lg shadow outline-1 outline"
-      :class="!showOpenButton ? 'outline-n-container' : 'outline-transparent'"
+      class="flex-shrink-0 shadow outline-1 outline"
+      :class="[
+        props.isWhatsAppLayout ? 'rounded-full' : 'rounded-lg',
+        !showOpenButton ? 'outline-n-container' : 'outline-transparent',
+      ]"
     >
       <Button
         v-if="isOpen"
@@ -182,7 +195,11 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
         size="sm"
         color="slate"
         no-animation
-        class="ltr:rounded-r-none rtl:rounded-l-none !outline-0"
+        :class="
+          props.isWhatsAppLayout
+            ? 'ltr:rounded-r-none rtl:rounded-l-none !outline-0'
+            : 'ltr:rounded-r-none rtl:rounded-l-none !outline-0'
+        "
         :is-loading="isLoading"
         @click="onCmdResolveConversation"
       />
@@ -221,7 +238,12 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
     <div
       v-if="showActionsDropdown"
       v-on-clickaway="closeDropdown"
-      class="border rounded-lg shadow-lg border-n-strong dark:border-n-strong box-content p-2 w-fit z-10 bg-n-alpha-3 backdrop-blur-[100px] absolute block left-auto top-full mt-0.5 start-0 xl:start-auto xl:end-0 max-w-[12.5rem] min-w-[9.75rem] [&_ul>li]:mb-0"
+      class="border box-content p-2 w-fit z-10 absolute block left-auto top-full mt-0.5 start-0 xl:start-auto xl:end-0 max-w-[12.5rem] min-w-[9.75rem] [&_ul>li]:mb-0"
+      :class="
+        props.isWhatsAppLayout
+          ? 'rounded-2xl border-[#d1d7db] bg-white shadow-[0_8px_24px_rgba(17,27,33,0.14)]'
+          : 'rounded-lg shadow-lg border-n-strong dark:border-n-strong bg-n-alpha-3 backdrop-blur-[100px]'
+      "
     >
       <WootDropdownMenu class="mb-0">
         <WootDropdownItem v-if="!isPending">
@@ -256,3 +278,21 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.resolve-actions--whatsapp {
+  :deep(.button-group),
+  :deep([data-test-id='button-group']) {
+    box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+  }
+
+  :deep(button) {
+    @apply border-0 text-[#54656f];
+    background-color: rgba(255, 255, 255, 0.92);
+  }
+
+  :deep(button:hover) {
+    background-color: #ffffff;
+  }
+}
+</style>

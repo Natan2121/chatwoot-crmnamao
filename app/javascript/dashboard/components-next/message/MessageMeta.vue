@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue';
-import { messageTimestamp } from 'shared/helpers/timeHelper';
+import { messageStamp, messageTimestamp } from 'shared/helpers/timeHelper';
 import { useI18n } from 'vue-i18n';
 import { useFunctionGetter } from 'dashboard/composables/store';
 
@@ -30,6 +30,7 @@ const { t, locale } = useI18n();
 const {
   status,
   isPrivate,
+  isWhatsAppLayout,
   createdAt,
   sourceId,
   messageType,
@@ -40,10 +41,15 @@ const {
 } = useMessageContext();
 
 const readableTime = computed(() =>
-  messageTimestamp(
-    contentAttributes?.value?.externalCreatedAt ?? createdAt.value,
-    'LLL d, h:mm a'
-  )
+  isWhatsAppLayout.value
+    ? messageStamp(
+        contentAttributes?.value?.externalCreatedAt ?? createdAt.value,
+        'HH:mm'
+      )
+    : messageTimestamp(
+        contentAttributes?.value?.externalCreatedAt ?? createdAt.value,
+        'LLL d, h:mm a'
+      )
 );
 
 const isScheduledMessage = computed(
@@ -219,10 +225,18 @@ const isEdited = computed(() => {
 const previousContent = computed(() => {
   return contentAttributes.value?.previousContent || '';
 });
+
+const metaClass = computed(() =>
+  isWhatsAppLayout.value ? 'gap-1 text-[11px] leading-none' : 'gap-1.5 text-xs'
+);
+
+const metaIconClass = computed(() =>
+  isWhatsAppLayout.value ? 'size-[11px]' : 'size-3'
+);
 </script>
 
 <template>
-  <div class="text-xs flex items-center gap-1.5">
+  <div class="flex items-center" :class="metaClass">
     <div class="inline">
       <time class="inline">{{ readableTime }}</time>
     </div>
@@ -234,7 +248,7 @@ const previousContent = computed(() => {
       }"
       class="inline-flex items-center gap-0.5"
     >
-      <Icon icon="i-lucide-alarm-clock" class="size-3" />
+      <Icon icon="i-lucide-alarm-clock" :class="metaIconClass" />
     </span>
     <span
       v-if="isEdited"
@@ -244,9 +258,17 @@ const previousContent = computed(() => {
       }"
       class="inline-flex items-center gap-0.5"
     >
-      <Icon icon="i-lucide-pencil" class="size-3" />
+      <Icon icon="i-lucide-pencil" :class="metaIconClass" />
     </span>
-    <Icon v-if="isPrivate" icon="i-lucide-lock-keyhole" class="size-3" />
-    <MessageStatus v-if="showStatusIndicator" :status="statusToShow" />
+    <Icon
+      v-if="isPrivate"
+      icon="i-lucide-lock-keyhole"
+      :class="metaIconClass"
+    />
+    <MessageStatus
+      v-if="showStatusIndicator"
+      :status="statusToShow"
+      :is-whats-app-layout="isWhatsAppLayout"
+    />
   </div>
 </template>

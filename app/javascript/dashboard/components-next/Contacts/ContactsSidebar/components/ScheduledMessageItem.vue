@@ -30,6 +30,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['edit', 'delete']);
@@ -161,7 +165,12 @@ watch(previewContent, () => {
 
 <template>
   <div
-    class="flex flex-col gap-3 border-b border-n-strong py-3 group/scheduled"
+    class="flex flex-col gap-3 py-3 group/scheduled"
+    :class="
+      isWhatsAppLayout
+        ? 'rounded-2xl border border-[#e3e6e8] bg-white px-4'
+        : 'border-b border-n-strong'
+    "
   >
     <div class="flex items-center gap-3">
       <Avatar
@@ -174,19 +183,25 @@ watch(previewContent, () => {
 
       <div class="flex-1 min-w-0">
         <p
-          class="text-sm font-medium text-n-slate-12 mb-0.5 line-clamp-1"
+          class="text-sm font-medium mb-0.5 line-clamp-1"
+          :class="isWhatsAppLayout ? 'text-[#111b21]' : 'text-n-slate-12'"
           :title="writtenBy"
         >
           {{ writtenBy }}
         </p>
         <p
           v-if="formattedScheduledTime"
-          class="flex items-center gap-1 text-xs text-n-slate-11 mb-0"
+          class="flex items-center gap-1 text-xs mb-0"
+          :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-11'"
         >
           <Icon icon="i-lucide-alarm-clock" class="size-3 shrink-0" />
           {{ formattedScheduledTime }}
         </p>
-        <p v-else class="text-xs text-n-slate-11 mb-0">
+        <p
+          v-else
+          class="text-xs mb-0"
+          :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-11'"
+        >
           {{ t('SCHEDULED_MESSAGES.ITEM.NO_SCHEDULE') }}
         </p>
       </div>
@@ -208,6 +223,7 @@ watch(previewContent, () => {
             color="slate"
             size="xs"
             icon="i-lucide-pencil"
+            :class="isWhatsAppLayout ? 'scheduled-message-item__action' : ''"
             @click="onEdit"
           />
           <Button
@@ -216,6 +232,7 @@ watch(previewContent, () => {
             color="ruby"
             size="xs"
             icon="i-lucide-trash"
+            :class="isWhatsAppLayout ? 'scheduled-message-item__action' : ''"
             @click="onDelete"
           />
         </div>
@@ -226,10 +243,13 @@ watch(previewContent, () => {
       v-if="hasPreviewContent"
       ref="noteContentRef"
       v-dompurify-html="formattedContent"
-      class="mb-0 prose-sm prose-p:text-sm prose-p:leading-relaxed prose-p:mb-1 prose-p:mt-0 prose-ul:mb-1 prose-ul:mt-0 text-n-slate-12"
-      :class="{
-        'line-clamp-4': collapsible && !isExpanded,
-      }"
+      class="mb-0 prose-sm prose-p:text-sm prose-p:leading-relaxed prose-p:mb-1 prose-p:mt-0 prose-ul:mb-1 prose-ul:mt-0"
+      :class="[
+        isWhatsAppLayout ? 'text-[#111b21]' : 'text-n-slate-12',
+        {
+          'line-clamp-4': collapsible && !isExpanded,
+        },
+      ]"
     />
 
     <div v-if="hasPreviewContent && collapsible && showToggle">
@@ -238,6 +258,7 @@ watch(previewContent, () => {
         color="blue"
         size="xs"
         :icon="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+        :class="isWhatsAppLayout ? 'scheduled-message-item__toggle' : ''"
         @click="() => toggleExpanded()"
       >
         <template v-if="isExpanded">
@@ -251,7 +272,8 @@ watch(previewContent, () => {
 
     <div
       v-if="hasTemplate"
-      class="flex items-center gap-1.5 text-xs text-n-slate-11"
+      class="flex items-center gap-1.5 text-xs"
+      :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-11'"
     >
       <Icon icon="i-lucide-zap" class="size-3 shrink-0" />
       <span class="truncate">
@@ -265,7 +287,8 @@ watch(previewContent, () => {
 
     <div
       v-if="shouldShowAttachmentLine"
-      class="flex items-center gap-1.5 text-xs text-n-slate-11"
+      class="flex items-center gap-1.5 text-xs"
+      :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-11'"
     >
       <Icon icon="i-lucide-paperclip" class="size-3 shrink-0" />
       <a
@@ -291,3 +314,10 @@ watch(previewContent, () => {
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.scheduled-message-item__action,
+.scheduled-message-item__toggle {
+  @apply rounded-full border-0;
+}
+</style>

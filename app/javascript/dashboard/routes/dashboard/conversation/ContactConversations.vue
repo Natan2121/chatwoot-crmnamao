@@ -17,6 +17,10 @@ export default {
       type: [String, Number],
       required: true,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   computed: {
     conversations() {
@@ -48,12 +52,20 @@ export default {
 
 <template>
   <div v-if="!uiFlags.isFetching" class="">
-    <div v-if="!previousConversations.length" class="no-label-message px-4 p-3">
+    <div
+      v-if="!previousConversations.length"
+      class="no-label-message px-4 p-3"
+      :class="isWhatsAppLayout ? 'no-label-message--whatsapp' : ''"
+    >
       <span>
         {{ $t('CONTACT_PANEL.CONVERSATIONS.NO_RECORDS_FOUND') }}
       </span>
     </div>
-    <div v-else class="contact-conversation--list">
+    <div
+      v-else
+      class="contact-conversation--list"
+      :class="isWhatsAppLayout ? 'contact-conversation--list-whatsapp' : ''"
+    >
       <ConversationCard
         v-for="conversation in previousConversations"
         :key="conversation.id"
@@ -74,5 +86,13 @@ export default {
 <style lang="scss" scoped>
 .no-label-message {
   @apply text-n-slate-11 mb-4;
+}
+
+.no-label-message--whatsapp {
+  @apply rounded-2xl border border-[#e3e6e8] bg-[#f7f8fa] mb-0 text-[#667781];
+}
+
+.contact-conversation--list-whatsapp {
+  @apply flex flex-col gap-2;
 }
 </style>

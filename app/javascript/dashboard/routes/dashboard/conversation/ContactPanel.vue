@@ -8,6 +8,7 @@ import {
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 
 import AccordionItem from 'dashboard/components/Accordion/AccordionItem.vue';
 import ContactConversations from './ContactConversations.vue';
@@ -37,6 +38,7 @@ const props = defineProps({
 });
 
 const {
+  uiSettings,
   updateUISettings,
   isContactSidebarItemOpen,
   conversationSidebarItemsOrder,
@@ -88,6 +90,14 @@ const conversationAdditionalAttributes = computed(
 );
 
 const channelType = computed(() => currentChat.value.meta?.channel);
+const currentInbox = computed(() =>
+  store.getters['inboxes/getInbox'](
+    props.inboxId || currentChat.value?.inbox_id
+  )
+);
+const isWhatsAppLayout = computed(() =>
+  shouldUseWhatsAppConversationLayout(uiSettings.value, currentInbox.value)
+);
 
 const contactGetter = useMapGetter('contacts/getContact');
 const contactId = computed(() => currentChat.value.meta?.sender?.id);
@@ -132,13 +142,24 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="w-full">
+  <div
+    class="contact-panel w-full"
+    :class="isWhatsAppLayout ? 'contact-panel--whatsapp' : ''"
+  >
     <SidebarActionsHeader
       :title="$t('CONVERSATION.SIDEBAR.CONTACT')"
+      :is-whats-app-layout="isWhatsAppLayout"
       @close="closeContactPanel"
     />
-    <ContactInfo :contact="contact" :channel-type="channelType" />
-    <div class="px-2 pb-8 list-group">
+    <ContactInfo
+      :contact="contact"
+      :channel-type="channelType"
+      :is-whats-app-layout="isWhatsAppLayout"
+    />
+    <div
+      class="px-2 pb-8 list-group"
+      :class="isWhatsAppLayout ? 'list-group--whatsapp' : ''"
+    >
       <Draggable
         :list="conversationSidebarItems"
         animation="200"
@@ -157,6 +178,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SCHEDULED_MESSAGES')"
               :is-open="isContactSidebarItemOpen('is_scheduled_messages_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value =>
@@ -166,6 +188,7 @@ onMounted(() => {
               <ScheduledMessages
                 :conversation-id="conversationId"
                 :inbox-id="inboxId"
+                :is-whats-app-layout="isWhatsAppLayout"
               />
             </AccordionItem>
           </div>
@@ -176,6 +199,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_ACTIONS')"
               :is-open="isContactSidebarItemOpen('is_conv_actions_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               @toggle="
                 value => toggleSidebarUIState('is_conv_actions_open', value)
               "
@@ -183,6 +207,7 @@ onMounted(() => {
               <ConversationAction
                 :conversation-id="conversationId"
                 :inbox-id="inboxId"
+                :is-whats-app-layout="isWhatsAppLayout"
               />
             </AccordionItem>
           </div>
@@ -193,6 +218,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_PARTICIPANTS.SIDEBAR_TITLE')"
               :is-open="isContactSidebarItemOpen('is_conv_participants_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               @toggle="
                 value =>
                   toggleSidebarUIState('is_conv_participants_open', value)
@@ -201,6 +227,7 @@ onMounted(() => {
               <ConversationParticipant
                 :conversation-id="conversationId"
                 :inbox-id="inboxId"
+                :is-whats-app-layout="isWhatsAppLayout"
               />
             </AccordionItem>
           </div>
@@ -208,6 +235,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_INFO')"
               :is-open="isContactSidebarItemOpen('is_conv_details_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value => toggleSidebarUIState('is_conv_details_open', value)
@@ -216,6 +244,7 @@ onMounted(() => {
               <ConversationInfo
                 :conversation-attributes="conversationAdditionalAttributes"
                 :contact-attributes="contactAdditionalAttributes"
+                :is-whats-app-layout="isWhatsAppLayout"
               />
             </AccordionItem>
           </div>
@@ -223,6 +252,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_ATTRIBUTES')"
               :is-open="isContactSidebarItemOpen('is_contact_attributes_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value =>
@@ -246,6 +276,7 @@ onMounted(() => {
                 $t('CONVERSATION_SIDEBAR.ACCORDION.PREVIOUS_CONVERSATION')
               "
               :is-open="isContactSidebarItemOpen('is_previous_conv_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value => toggleSidebarUIState('is_previous_conv_open', value)
@@ -254,6 +285,7 @@ onMounted(() => {
               <ContactConversations
                 :contact-id="contact.id"
                 :conversation-id="conversationId"
+                :is-whats-app-layout="isWhatsAppLayout"
               />
             </AccordionItem>
           </div>
@@ -264,6 +296,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.MACROS')"
               :is-open="isContactSidebarItemOpen('is_macro_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="value => toggleSidebarUIState('is_macro_open', value)"
             >
@@ -280,6 +313,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.LINEAR_ISSUES')"
               :is-open="isContactSidebarItemOpen('is_linear_issues_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value => toggleSidebarUIState('is_linear_issues_open', value)
@@ -297,6 +331,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SHOPIFY_ORDERS')"
               :is-open="isContactSidebarItemOpen('is_shopify_orders_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value => toggleSidebarUIState('is_shopify_orders_open', value)
@@ -309,6 +344,7 @@ onMounted(() => {
             <AccordionItem
               :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONTACT_NOTES')"
               :is-open="isContactSidebarItemOpen('is_contact_notes_open')"
+              :is-whats-app-layout="isWhatsAppLayout"
               compact
               @toggle="
                 value => toggleSidebarUIState('is_contact_notes_open', value)
@@ -324,9 +360,21 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
+.contact-panel--whatsapp {
+  @apply h-full bg-[#f7f8fa];
+}
+
+.list-group--whatsapp {
+  @apply pt-3;
+}
+
 ::v-deep {
   .contact--profile {
     @apply pb-3 border-b border-solid border-n-weak;
+  }
+
+  .list-group--whatsapp .ghost {
+    @apply rounded-2xl bg-[#d9fdd3]/40;
   }
 
   .conversation--actions .multiselect-wrap--small {
@@ -339,6 +387,14 @@ onMounted(() => {
         @apply w-full;
       }
     }
+  }
+
+  .list-group--whatsapp .multiselect-wrap--small .multiselect {
+    @apply rounded-2xl border border-[#dfe5e7] bg-white shadow-none;
+  }
+
+  .list-group--whatsapp .multiselect-wrap--small .multiselect__tags {
+    @apply rounded-2xl border-0 bg-transparent;
   }
 }
 </style>

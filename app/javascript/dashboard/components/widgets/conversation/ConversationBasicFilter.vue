@@ -14,6 +14,10 @@ defineProps({
     type: Boolean,
     required: true,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['changeFilter']);
@@ -138,15 +142,22 @@ const handleSortChange = value => {
       slate
       faded
       xs
+      :class="{
+        '!rounded-full !border-0 !bg-white/90 !text-[#54656f] shadow-[0_1px_2px_rgba(11,20,26,0.08)]':
+          isWhatsAppLayout,
+      }"
       @click="toggleDropdown()"
     />
     <div
       v-if="showActionsDropdown"
       v-on-click-outside="() => toggleDropdown()"
-      class="mt-1 bg-n-alpha-3 backdrop-blur-[100px] border border-n-weak w-72 rounded-xl p-4 absolute z-40 top-full"
+      class="mt-1 w-72 rounded-xl p-4 absolute z-40 top-full border"
       :class="{
+        'bg-white/95 border-[#d1d7db] shadow-[0_8px_24px_rgba(17,27,33,0.12)]':
+          isWhatsAppLayout,
         'ltr:left-0 rtl:right-0': !isOnExpandedLayout,
         'ltr:right-0 rtl:left-0': isOnExpandedLayout,
+        'bg-n-alpha-3 backdrop-blur-[100px] border-n-weak': !isWhatsAppLayout,
       }"
     >
       <div class="flex items-center justify-between last:mt-4 gap-2">

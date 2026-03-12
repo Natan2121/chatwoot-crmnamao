@@ -15,6 +15,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const { isAdmin } = useAdmin();
@@ -58,6 +62,9 @@ export default {
       ) {
         return 'h-full overflow-auto w-full';
       }
+      if (this.isWhatsAppLayout) {
+        return 'flex-1 min-w-0 px-0 flex flex-col items-center justify-center h-full bg-[#efeae2]';
+      }
       return 'flex-1 min-w-0 px-0 flex flex-col items-center justify-center h-full bg-n-surface-1';
     },
   },
@@ -88,10 +95,12 @@ export default {
       <EmptyStateMessage
         v-if="!allConversations.length"
         :message="$t('CONVERSATION.NO_MESSAGE_1')"
+        :is-whats-app-layout="isWhatsAppLayout"
       />
       <EmptyStateMessage
         v-else-if="allConversations.length && !currentChat.id"
         :message="conversationMissingMessage"
+        :is-whats-app-layout="isWhatsAppLayout"
       />
     </div>
   </div>

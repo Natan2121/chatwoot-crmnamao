@@ -2,8 +2,10 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useUISettings } from 'dashboard/composables/useUISettings';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 import Avatar from 'next/avatar/Avatar.vue';
 import MessagePreview from './MessagePreview.vue';
 import InboxName from '../InboxName.vue';
@@ -47,6 +49,7 @@ const emit = defineEmits([
 
 const router = useRouter();
 const store = useStore();
+const { uiSettings } = useUISettings();
 
 const hovered = ref(false);
 const showContextMenu = ref(false);
@@ -80,6 +83,10 @@ const unreadCount = computed(() => props.chat.unread_count);
 
 const hasUnread = computed(() => unreadCount.value > 0);
 
+const unreadCountLabel = computed(() => {
+  return unreadCount.value > 9 ? `${9}+` : String(unreadCount.value);
+});
+
 const isInboxNameVisible = computed(() => !activeInbox.value);
 
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
@@ -93,6 +100,10 @@ const inboxId = computed(() => props.chat.inbox_id);
 
 const inbox = computed(() => {
   return inboxId.value ? store.getters['inboxes/getInbox'](inboxId.value) : {};
+});
+
+const isWhatsAppLayout = computed(() => {
+  return shouldUseWhatsAppConversationLayout(uiSettings.value, inbox.value);
 });
 
 const showInboxName = computed(() => {
@@ -118,6 +129,13 @@ const showLabelsSection = computed(() => {
 });
 
 const messagePreviewClass = computed(() => {
+  if (isWhatsAppLayout.value) {
+    return [
+      hasUnread.value ? 'text-[#111b21] font-medium' : 'text-[#667781]',
+      'truncate',
+    ];
+  }
+
   return [
     hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
     !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
@@ -238,13 +256,21 @@ const deleteConversation = () => {
 
 <template>
   <div
-    class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 border-t-0 border-b-0 border-l-0 border-r-0 border-transparent border-solid cursor-pointer conversation hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group"
-    :class="{
-      'active animate-card-select bg-n-background border-n-weak': isActiveChat,
-      'bg-n-slate-2': selected,
-      'px-0': compact,
-      'px-3': !compact,
-    }"
+    class="relative flex w-auto max-w-full cursor-pointer conversation group transition-colors duration-150"
+    :class="[
+      compact ? 'px-0' : 'px-3',
+      isWhatsAppLayout
+        ? 'items-center bg-white hover:bg-[#f5f6f6]'
+        : 'items-start py-0 hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3',
+      {
+        'active animate-card-select bg-[#f0f2f5]':
+          isActiveChat && isWhatsAppLayout,
+        'active animate-card-select bg-n-background border-n-weak':
+          isActiveChat && !isWhatsAppLayout,
+        'bg-n-slate-2': selected && !isWhatsAppLayout,
+        'bg-[#ebf3ff]': selected && isWhatsAppLayout,
+      },
+    ]"
     @click="onCardClick"
     @contextmenu="openContextMenu($event)"
   >
@@ -257,9 +283,9 @@ const deleteConversation = () => {
         v-if="!hideThumbnail"
         :name="currentContact.name"
         :src="currentContact.thumbnail"
-        :size="32"
+        :size="isWhatsAppLayout ? 40 : 32"
         :status="currentContact.availability_status"
-        :class="!showInboxName ? 'mt-4' : 'mt-8'"
+        :class="isWhatsAppLayout ? 'mt-0' : !showInboxName ? 'mt-4' : 'mt-8'"
         hide-offline-status
         rounded-full
       >
@@ -282,6 +308,99 @@ const deleteConversation = () => {
       </Avatar>
     </div>
     <div
+      v-if="isWhatsAppLayout"
+      class="flex-1 min-w-0 py-3 ltr:pl-3 rtl:pr-3 border-b border-[#e9edef]"
+    >
+      <div class="flex items-start gap-3 min-w-0">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline gap-3 min-w-0">
+            <h4
+              class="conversation--user my-0 min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[15px] leading-5 text-[#111b21]"
+              :class="hasUnread ? 'font-semibold' : 'font-medium'"
+            >
+              {{ currentContact.name }}
+            </h4>
+            <span
+              class="flex-shrink-0 text-[11px] leading-4"
+              :class="hasUnread ? 'text-[#25d366]' : 'text-[#667781]'"
+            >
+              <TimeAgo
+                :last-activity-timestamp="chat.timestamp"
+                :created-at-timestamp="chat.created_at"
+              />
+            </span>
+          </div>
+          <div class="mt-1 flex items-center gap-2 min-w-0">
+            <VoiceCallStatus
+              v-if="voiceCallData.status"
+              key="voice-status-row"
+              :status="voiceCallData.status"
+              :direction="voiceCallData.direction"
+              :is-whats-app-layout="isWhatsAppLayout"
+              :message-preview-class="messagePreviewClass"
+            />
+            <MessagePreview
+              v-else-if="lastMessageInChat"
+              key="message-preview"
+              :message="lastMessageInChat"
+              :is-whats-app-layout="isWhatsAppLayout"
+              class="my-0 min-w-0 flex-1 text-[13px] leading-5 text-[#667781]"
+              :class="messagePreviewClass"
+            />
+            <p
+              v-else
+              key="no-messages"
+              class="my-0 min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[13px] leading-5 text-[#667781]"
+              :class="messagePreviewClass"
+            >
+              <fluent-icon
+                size="16"
+                class="-mt-0.5 align-middle inline-block text-[#667781]"
+                icon="info"
+              />
+              <span class="mx-0.5">
+                {{ $t(`CHAT_LIST.NO_MESSAGES`) }}
+              </span>
+            </p>
+            <span
+              v-if="hasUnread"
+              class="inline-flex min-w-[1.25rem] flex-shrink-0 items-center justify-center rounded-full bg-[#25d366] px-1.5 py-0.5 text-[11px] font-semibold leading-4 text-[#111b21]"
+            >
+              {{ unreadCountLabel }}
+            </span>
+          </div>
+          <div
+            v-if="showMetaSection"
+            class="mt-1.5 flex items-center gap-2 overflow-hidden text-[11px] leading-4 text-[#667781]"
+          >
+            <InboxName
+              v-if="showInboxName"
+              :inbox="inbox"
+              class="max-w-[9rem] min-w-0"
+            />
+            <span
+              v-if="showAssignee && assignee.name"
+              class="inline-flex min-w-0 items-center gap-1 truncate rounded-full bg-[#f0f2f5] px-2 py-0.5 font-medium text-[#54656f]"
+            >
+              <fluent-icon icon="person" size="12" class="text-[#54656f]" />
+              {{ assignee.name }}
+            </span>
+            <PriorityMark :priority="chat.priority" class="flex-shrink-0" />
+          </div>
+          <CardLabels
+            v-if="showLabelsSection"
+            :conversation-labels="chat.labels"
+            class="mt-2"
+          >
+            <template v-if="hasSlaPolicyId" #before>
+              <SLACardLabel :chat="chat" class="ltr:mr-1 rtl:ml-1" />
+            </template>
+          </CardLabels>
+        </div>
+      </div>
+    </div>
+    <div
+      v-else
       class="px-0 py-3 border-b group-hover:border-transparent flex-1 border-n-slate-3 min-w-0"
     >
       <div
@@ -320,12 +439,14 @@ const deleteConversation = () => {
         key="voice-status-row"
         :status="voiceCallData.status"
         :direction="voiceCallData.direction"
+        :is-whats-app-layout="isWhatsAppLayout"
         :message-preview-class="messagePreviewClass"
       />
       <MessagePreview
         v-else-if="lastMessageInChat"
         key="message-preview"
         :message="lastMessageInChat"
+        :is-whats-app-layout="isWhatsAppLayout"
         class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm"
         :class="messagePreviewClass"
       />
@@ -358,7 +479,7 @@ const deleteConversation = () => {
           class="shadow-lg rounded-full text-xxs font-semibold h-4 leading-4 ltr:ml-auto rtl:mr-auto mt-1 min-w-[1rem] px-1 py-0 text-center text-white bg-n-teal-9"
           :class="hasUnread ? 'block' : 'hidden'"
         >
-          {{ unreadCount > 9 ? '9+' : unreadCount }}
+          {{ unreadCountLabel }}
         </span>
       </div>
       <CardLabels

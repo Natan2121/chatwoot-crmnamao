@@ -19,6 +19,7 @@ const {
   variant,
   orientation,
   inReplyTo,
+  isWhatsAppLayout,
   shouldGroupWithNext,
   additionalAttributes,
 } = useMessageContext();
@@ -38,12 +39,39 @@ const varaintBaseMap = {
     'bg-n-solid-amber/70 border border-dashed border-n-amber-12 text-n-amber-12',
 };
 
+const whatsAppVariantBaseMap = {
+  [MESSAGE_VARIANTS.AGENT]:
+    'bg-[#d9fdd3] text-[#111b21] shadow-[0_1px_0_rgba(11,20,26,0.13)]',
+  [MESSAGE_VARIANTS.PRIVATE]:
+    'bg-[#fff3c4] text-[#5c4b14] shadow-[0_1px_0_rgba(11,20,26,0.08)]',
+  [MESSAGE_VARIANTS.USER]:
+    'bg-white text-[#111b21] shadow-[0_1px_0_rgba(11,20,26,0.13)]',
+  [MESSAGE_VARIANTS.ACTIVITY]: 'bg-white/70 text-[#54656f] text-sm',
+  [MESSAGE_VARIANTS.BOT]:
+    'bg-[#d9fdd3] text-[#111b21] shadow-[0_1px_0_rgba(11,20,26,0.13)]',
+  [MESSAGE_VARIANTS.TEMPLATE]:
+    'bg-[#d9fdd3] text-[#111b21] shadow-[0_1px_0_rgba(11,20,26,0.13)]',
+  [MESSAGE_VARIANTS.ERROR]:
+    'bg-[#ffe5e5] text-[#7a1515] shadow-[0_1px_0_rgba(11,20,26,0.08)]',
+  [MESSAGE_VARIANTS.EMAIL]: 'w-full',
+  [MESSAGE_VARIANTS.UNSUPPORTED]:
+    'bg-[#fff3c4] border border-dashed border-[#c6ab37] text-[#5c4b14]',
+};
+
 const orientationMap = {
   [ORIENTATION.LEFT]:
     'left-bubble rounded-xl ltr:rounded-bl-sm rtl:rounded-br-sm',
   [ORIENTATION.RIGHT]:
     'right-bubble rounded-xl ltr:rounded-br-sm rtl:rounded-bl-sm',
   [ORIENTATION.CENTER]: 'rounded-md',
+};
+
+const whatsAppOrientationMap = {
+  [ORIENTATION.LEFT]:
+    'left-bubble rounded-2xl ltr:rounded-tl-md rtl:rounded-tr-md',
+  [ORIENTATION.RIGHT]:
+    'right-bubble rounded-2xl ltr:rounded-tr-md rtl:rounded-tl-md',
+  [ORIENTATION.CENTER]: 'rounded-2xl',
 };
 
 const flexOrientationClass = computed(() => {
@@ -67,10 +95,16 @@ const scheduledMessageClass = computed(() => {
 });
 
 const messageClass = computed(() => {
-  const classToApply = [varaintBaseMap[variant.value]];
+  const variantClassMap = isWhatsAppLayout.value
+    ? whatsAppVariantBaseMap
+    : varaintBaseMap;
+  const orientationClassMap = isWhatsAppLayout.value
+    ? whatsAppOrientationMap
+    : orientationMap;
+  const classToApply = [variantClassMap[variant.value]];
 
   if (variant.value !== MESSAGE_VARIANTS.ACTIVITY) {
-    classToApply.push(orientationMap[orientation.value]);
+    classToApply.push(orientationClassMap[orientation.value]);
   } else {
     classToApply.push('rounded-lg');
   }
@@ -95,6 +129,14 @@ const shouldShowMeta = computed(
     variant.value !== MESSAGE_VARIANTS.ACTIVITY
 );
 
+const bubbleWidthClass = computed(() => {
+  if (variant.value === MESSAGE_VARIANTS.EMAIL) {
+    return '';
+  }
+
+  return isWhatsAppLayout.value ? 'max-w-[78%]' : 'max-w-lg';
+});
+
 const replyToPreview = computed(() => {
   if (!inReplyTo) return '';
 
@@ -113,23 +155,21 @@ const replyToPreview = computed(() => {
 </script>
 
 <template>
-  <div
-    class="text-sm"
-    :class="[
-      messageClass,
-      {
-        'max-w-lg': variant !== MESSAGE_VARIANTS.EMAIL,
-      },
-    ]"
-  >
+  <div class="text-sm" :class="[messageClass, bubbleWidthClass]">
     <div
       v-if="inReplyTo"
-      class="p-2 -mx-1 mb-2 rounded-lg cursor-pointer bg-n-alpha-black1"
+      class="p-2 -mx-1 mb-2 cursor-pointer"
+      :class="
+        isWhatsAppLayout
+          ? 'rounded-xl border-l-[3px] border-[#25d366] bg-black/5'
+          : 'rounded-lg bg-n-alpha-black1'
+      "
       @click="scrollToMessage"
     >
       <div
         v-dompurify-html="replyToPreview"
         class="prose prose-bubble line-clamp-2"
+        :class="isWhatsAppLayout ? 'text-[#54656f]' : ''"
       />
     </div>
     <slot />
@@ -138,9 +178,13 @@ const replyToPreview = computed(() => {
       :class="[
         flexOrientationClass,
         variant === MESSAGE_VARIANTS.EMAIL ? 'px-3 pb-3' : '',
-        variant === MESSAGE_VARIANTS.PRIVATE
-          ? 'text-n-amber-12/50'
-          : 'text-n-slate-11',
+        isWhatsAppLayout
+          ? variant === MESSAGE_VARIANTS.PRIVATE
+            ? 'text-[#8e7a32]'
+            : 'text-[#667781]'
+          : variant === MESSAGE_VARIANTS.PRIVATE
+            ? 'text-n-amber-12/50'
+            : 'text-n-slate-11',
       ]"
       class="mt-2"
     />

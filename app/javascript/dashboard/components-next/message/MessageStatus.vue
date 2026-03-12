@@ -6,11 +6,15 @@ import { MESSAGE_STATUS } from './constants';
 
 import Icon from 'next/icon/Icon.vue';
 
-const { status } = defineProps({
+const props = defineProps({
   status: {
     type: String,
     required: true,
     validator: value => Object.values(MESSAGE_STATUS).includes(value),
+  },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
   },
 });
 
@@ -40,7 +44,7 @@ const rotateIcon = () => {
 };
 
 useIntervalFn(rotateIcon, 500, {
-  immediate: status === MESSAGE_STATUS.PROGRESS,
+  immediate: props.status === MESSAGE_STATUS.PROGRESS,
   immediateCallback: false,
 });
 
@@ -51,17 +55,23 @@ const statusIcon = computed(() => {
     [MESSAGE_STATUS.READ]: 'i-lucide-check-check',
   };
 
-  return statusIconMap[status];
+  return statusIconMap[props.status];
 });
 
 const statusColor = computed(() => {
-  const statusIconMap = {
-    [MESSAGE_STATUS.SENT]: 'text-n-slate-10',
-    [MESSAGE_STATUS.DELIVERED]: 'text-n-slate-10',
-    [MESSAGE_STATUS.READ]: 'text-[#7EB6FF]',
-  };
+  const statusIconMap = props.isWhatsAppLayout
+    ? {
+        [MESSAGE_STATUS.SENT]: 'text-[#8696a0]',
+        [MESSAGE_STATUS.DELIVERED]: 'text-[#8696a0]',
+        [MESSAGE_STATUS.READ]: 'text-[#53bdeb]',
+      }
+    : {
+        [MESSAGE_STATUS.SENT]: 'text-n-slate-10',
+        [MESSAGE_STATUS.DELIVERED]: 'text-n-slate-10',
+        [MESSAGE_STATUS.READ]: 'text-[#7EB6FF]',
+      };
 
-  return statusIconMap[status];
+  return statusIconMap[props.status];
 });
 
 const tooltipText = computed(() => {
@@ -72,22 +82,29 @@ const tooltipText = computed(() => {
     [MESSAGE_STATUS.PROGRESS]: t('CHAT_LIST.SENDING'),
   };
 
-  return statusTextMap[status];
+  return statusTextMap[props.status];
 });
+
+const iconClass = computed(() =>
+  props.isWhatsAppLayout ? 'size-[13px]' : 'size-[14px]'
+);
+
+const progressClass = computed(() =>
+  props.isWhatsAppLayout ? 'size-[12px] text-[#8696a0]' : 'text-n-slate-10'
+);
 </script>
 
 <template>
   <Icon
-    v-if="status === MESSAGE_STATUS.PROGRESS"
+    v-if="props.status === MESSAGE_STATUS.PROGRESS"
     v-tooltip.top-start="tooltipText"
     :icon="progessIcon"
-    class="text-n-slate-10"
+    :class="progressClass"
   />
   <Icon
     v-else
     v-tooltip.top-start="tooltipText"
     :icon="statusIcon"
-    :class="statusColor"
-    class="size-[14px]"
+    :class="[statusColor, iconClass]"
   />
 </template>

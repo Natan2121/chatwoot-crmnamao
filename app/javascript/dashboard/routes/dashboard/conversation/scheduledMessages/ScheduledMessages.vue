@@ -18,6 +18,10 @@ const props = defineProps({
     type: [Number, String],
     default: null,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const { t } = useI18n();
@@ -133,12 +137,16 @@ watch(
 </script>
 
 <template>
-  <div>
+  <div
+    class="scheduled-messages"
+    :class="isWhatsAppLayout ? 'scheduled-messages--whatsapp' : ''"
+  >
     <div class="flex items-center justify-between gap-2 px-4 pt-3 pb-2">
       <NextButton
         ghost
         xs
         icon="i-lucide-plus"
+        :class="isWhatsAppLayout ? 'scheduled-messages__add' : ''"
         :label="t('SCHEDULED_MESSAGES.NEW_BUTTON')"
         :disabled="!conversationId || isFetching"
         @click="openCreateModal"
@@ -147,15 +155,22 @@ watch(
 
     <ScheduledMessageSkeletonLoader v-if="isFetching" :rows="3" />
 
-    <div v-else class="flex flex-col max-h-[400px] overflow-y-auto">
+    <div
+      v-else
+      class="flex flex-col max-h-[400px] overflow-y-auto"
+      :class="
+        isWhatsAppLayout ? 'scheduled-messages__list gap-2 px-3 pb-3' : ''
+      "
+    >
       <!-- Draft Messages -->
       <template v-if="draftMessages.length">
         <ScheduledMessageItem
           v-for="message in draftMessages"
           :key="message.id"
-          class="px-4 py-4"
+          :class="isWhatsAppLayout ? 'scheduled-messages__item' : 'px-4 py-4'"
           :scheduled-message="message"
           :written-by="getWrittenBy(message)"
+          :is-whats-app-layout="isWhatsAppLayout"
           allow-edit
           allow-delete
           collapsible
@@ -169,9 +184,10 @@ watch(
         <ScheduledMessageItem
           v-for="message in pendingMessages"
           :key="message.id"
-          class="px-4 py-4"
+          :class="isWhatsAppLayout ? 'scheduled-messages__item' : 'px-4 py-4'"
           :scheduled-message="message"
           :written-by="getWrittenBy(message)"
+          :is-whats-app-layout="isWhatsAppLayout"
           allow-edit
           allow-delete
           collapsible
@@ -183,7 +199,12 @@ watch(
       <!-- Empty State for active messages -->
       <p
         v-if="!hasActiveMessages && !hasHistory"
-        class="px-6 py-6 text-sm leading-6 text-center text-n-slate-11"
+        class="px-6 py-6 text-sm leading-6 text-center"
+        :class="
+          isWhatsAppLayout
+            ? 'mx-3 rounded-2xl border border-[#e3e6e8] bg-[#f7f8fa] text-[#667781]'
+            : 'text-n-slate-11'
+        "
       >
         {{ t('SCHEDULED_MESSAGES.EMPTY_STATE') }}
       </p>
@@ -191,18 +212,27 @@ watch(
       <!-- History Section -->
       <template v-if="hasHistory">
         <div
-          class="flex items-center gap-2 px-4 pt-4 pb-2 border-t border-n-weak"
+          class="flex items-center gap-2 px-4 pt-4 pb-2"
+          :class="
+            isWhatsAppLayout
+              ? 'mx-3 border-t border-[#dfe5e7]'
+              : 'border-t border-n-weak'
+          "
         >
-          <span class="text-xs font-medium text-n-slate-11 uppercase">
+          <span
+            class="text-xs font-medium uppercase"
+            :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-11'"
+          >
             {{ t('SCHEDULED_MESSAGES.PAST_MESSAGES_SECTION') }}
           </span>
         </div>
         <ScheduledMessageItem
           v-for="message in historyMessages"
           :key="message.id"
-          class="px-4 py-4"
+          :class="isWhatsAppLayout ? 'scheduled-messages__item' : 'px-4 py-4'"
           :scheduled-message="message"
           :written-by="getWrittenBy(message)"
+          :is-whats-app-layout="isWhatsAppLayout"
           :allow-edit="false"
           :allow-delete="false"
           collapsible
@@ -251,3 +281,20 @@ watch(
     </woot-modal>
   </div>
 </template>
+
+<style scoped lang="scss">
+.scheduled-messages--whatsapp {
+  :deep(.scheduled-messages__add button) {
+    @apply rounded-full border-0 text-[#54656f];
+    background-color: #ffffff;
+  }
+
+  :deep(.scheduled-messages__add button:hover) {
+    background-color: #f0f2f5;
+  }
+
+  :deep(.scheduled-messages__item) {
+    @apply rounded-2xl border border-[#e3e6e8] bg-white px-4 py-4;
+  }
+}
+</style>

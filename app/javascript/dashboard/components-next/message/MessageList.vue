@@ -1,5 +1,7 @@
 <script setup>
-import { defineProps, computed, reactive } from 'vue';
+import { computed, reactive } from 'vue';
+import { fromUnixTime, isSameDay, isThisYear } from 'date-fns';
+import { useI18n } from 'vue-i18n';
 import Message from './Message.vue';
 import { MESSAGE_TYPES } from './constants.js';
 import { useCamelCase } from 'dashboard/composables/useTransformKeys';
@@ -38,6 +40,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
   messages: {
     type: Array,
     default: () => [],
@@ -45,6 +51,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['retry']);
+const { locale } = useI18n();
 
 const allMessages = computed(() => {
   return useCamelCase(props.messages, {
@@ -54,6 +61,32 @@ const allMessages = computed(() => {
 });
 
 const currentChat = useMapGetter('getSelectedChat');
+
+const formatDayDividerLabel = createdAt => {
+  const date = fromUnixTime(createdAt);
+  const localeCode = locale.value?.replace('_', '-') || 'en';
+
+  return date.toLocaleDateString(localeCode, {
+    month: 'long',
+    day: 'numeric',
+    ...(isThisYear(date) ? {} : { year: 'numeric' }),
+  });
+};
+
+const shouldShowDateDivider = (index, searchList) => {
+  if (!props.isWhatsAppLayout) {
+    return false;
+  }
+
+  if (index === 0) {
+    return true;
+  }
+
+  return !isSameDay(
+    fromUnixTime(searchList[index].createdAt),
+    fromUnixTime(searchList[index - 1].createdAt)
+  );
+};
 
 // Cache for fetched reply messages to avoid duplicate API calls
 const fetchedReplyMessages = reactive(new Map());
@@ -168,9 +201,31 @@ const getInReplyToMessage = parentMessage => {
 </script>
 
 <template>
-  <ul class="px-4 bg-n-surface-1">
+  <ul
+    class="transition-colors duration-150"
+    :class="
+      isWhatsAppLayout
+        ? 'bg-transparent px-5 py-4 sm:px-6'
+        : 'bg-n-surface-1 px-4'
+    "
+  >
     <slot name="beforeAll" />
     <template v-for="(message, index) in allMessages" :key="message.id">
+      <li
+        v-if="shouldShowDateDivider(index, allMessages)"
+        class="list-none my-3 flex justify-center"
+      >
+        <span
+          class="rounded-lg px-3 py-1 text-[12px] font-medium shadow-[0_1px_2px_rgba(11,20,26,0.08)]"
+          :class="
+            isWhatsAppLayout
+              ? 'bg-[#d9fdd3]/80 text-[#54656f]'
+              : 'bg-white text-n-slate-11'
+          "
+        >
+          {{ formatDayDividerLabel(message.createdAt) }}
+        </span>
+      </li>
       <slot
         v-if="firstUnreadId && message.id === firstUnreadId"
         name="unreadBadge"

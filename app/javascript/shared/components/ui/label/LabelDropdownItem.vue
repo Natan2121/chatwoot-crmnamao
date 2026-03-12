@@ -18,6 +18,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['selectLabel'],
 
@@ -38,7 +42,10 @@ export default {
       trailing-icon
       :icon="selected ? 'i-lucide-circle-check' : ''"
       class="w-full !px-2.5 justify-between"
-      :class="{ '!flex-row': !selected }"
+      :class="[
+        { '!flex-row': !selected },
+        isWhatsAppLayout ? 'label-dropdown-item--whatsapp' : '',
+      ]"
       @click="onClick"
     >
       <div class="flex items-center min-w-0 gap-2">
@@ -57,3 +64,13 @@ export default {
     </NextButton>
   </woot-dropdown-item>
 </template>
+
+<style scoped lang="scss">
+:deep(.label-dropdown-item--whatsapp) {
+  @apply rounded-2xl border border-transparent py-2;
+}
+
+:deep(.label-dropdown-item--whatsapp:hover) {
+  background-color: #f7f8fa;
+}
+</style>

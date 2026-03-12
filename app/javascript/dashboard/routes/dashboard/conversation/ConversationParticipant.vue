@@ -20,6 +20,10 @@ export default {
       type: [Number, String],
       required: true,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const { agentsList } = useAgentsList(false);
@@ -155,15 +159,26 @@ export default {
 </script>
 
 <template>
-  <div class="relative">
+  <div
+    class="conversation-participant relative"
+    :class="isWhatsAppLayout ? 'conversation-participant--whatsapp' : ''"
+  >
     <div class="flex justify-between">
       <div class="flex justify-between w-full mb-1">
         <div>
-          <p v-if="watchersList.length" class="m-0 text-sm total-watchers">
+          <p
+            v-if="watchersList.length"
+            class="m-0 text-sm total-watchers"
+            :class="isWhatsAppLayout ? 'font-medium text-[#111b21]' : ''"
+          >
             <Spinner v-if="watchersUiFlas.isFetching" size="tiny" />
             {{ totalWatchersText }}
           </p>
-          <p v-else class="m-0 text-sm text-n-slate-10">
+          <p
+            v-else
+            class="m-0 text-sm"
+            :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-10'"
+          >
             {{ $t('CONVERSATION_PARTICIPANTS.NO_PARTICIPANTS_TEXT') }}
           </p>
         </div>
@@ -174,6 +189,7 @@ export default {
           sm
           icon="i-lucide-settings"
           class="relative -top-1"
+          :class="isWhatsAppLayout ? 'conversation-participant__settings' : ''"
           :title="$t('CONVERSATION_PARTICIPANTS.ADD_PARTICIPANTS')"
           @click="onOpenDropdown"
         />
@@ -184,8 +200,14 @@ export default {
         :more-thumbnails-text="moreThumbnailsText"
         :show-more-thumbnails-count="showMoreThumbs"
         :users-list="thumbnailList"
+        :size="isWhatsAppLayout ? 28 : 24"
+        :gap="isWhatsAppLayout ? 'tight' : 'normal'"
       />
-      <p v-if="isUserWatching" class="m-0 text-sm text-n-slate-10">
+      <p
+        v-if="isUserWatching"
+        class="m-0 text-sm"
+        :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-10'"
+      >
         {{ $t('CONVERSATION_PARTICIPANTS.YOU_ARE_WATCHING') }}
       </p>
       <NextButton
@@ -194,6 +216,7 @@ export default {
         xs
         icon="i-lucide-arrow-right"
         class="!gap-1"
+        :class="isWhatsAppLayout ? 'conversation-participant__watch-link' : ''"
         :label="$t('CONVERSATION_PARTICIPANTS.WATCH_CONVERSATION')"
         @click="onSelfAssign"
       />
@@ -204,19 +227,32 @@ export default {
           onCloseDropdown();
         }
       "
-      :class="{
-        'block visible': showDropDown,
-        'hidden invisible': !showDropDown,
-      }"
-      class="border rounded-lg shadow-lg bg-n-alpha-3 absolute backdrop-blur-[100px] border-n-strong dark:border-n-strong p-2 z-[9999] box-border top-8 w-full"
+      class="absolute box-border top-8 w-full p-2 z-[9999]"
+      :class="[
+        {
+          'block visible': showDropDown,
+          'hidden invisible': !showDropDown,
+        },
+        isWhatsAppLayout
+          ? 'rounded-2xl border border-[#dfe5e7] bg-white shadow-[0_12px_32px_rgba(17,27,33,0.12)]'
+          : 'border rounded-lg shadow-lg bg-n-alpha-3 backdrop-blur-[100px] border-n-strong dark:border-n-strong',
+      ]"
     >
       <div class="flex items-center justify-between mb-1">
         <h4
-          class="m-0 overflow-hidden text-sm whitespace-nowrap text-ellipsis text-n-slate-12"
+          class="m-0 overflow-hidden text-sm whitespace-nowrap text-ellipsis"
+          :class="isWhatsAppLayout ? 'text-[#111b21]' : 'text-n-slate-12'"
         >
           {{ $t('CONVERSATION_PARTICIPANTS.ADD_PARTICIPANTS') }}
         </h4>
-        <NextButton ghost slate xs icon="i-lucide-x" @click="onCloseDropdown" />
+        <NextButton
+          ghost
+          slate
+          xs
+          icon="i-lucide-x"
+          :class="isWhatsAppLayout ? 'conversation-participant__close' : ''"
+          @click="onCloseDropdown"
+        />
       </div>
       <MultiselectDropdownItems
         :options="agentsList"
@@ -227,3 +263,24 @@ export default {
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.conversation-participant--whatsapp {
+  @apply rounded-2xl border border-[#e3e6e8] bg-[#f7f8fa] p-3;
+
+  :deep(.conversation-participant__settings button),
+  :deep(.conversation-participant__close button) {
+    @apply rounded-full border-0 text-[#54656f];
+    background-color: #ffffff;
+  }
+
+  :deep(.conversation-participant__settings button:hover),
+  :deep(.conversation-participant__close button:hover) {
+    background-color: #f0f2f5;
+  }
+
+  :deep(.conversation-participant__watch-link button) {
+    @apply text-[#008069];
+  }
+}
+</style>

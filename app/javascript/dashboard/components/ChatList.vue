@@ -54,6 +54,7 @@ import { emitter } from 'shared/helpers/mitt';
 import wootConstants from 'dashboard/constants/globals';
 import advancedFilterOptions from './widgets/conversation/advancedFilterItems';
 import filterQueryGenerator from '../helper/filterQueryGenerator.js';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 import languages from 'dashboard/components/widgets/conversation/advancedFilterItems/languages';
 import countries from 'shared/constants/countries';
 import { generateValuesForEditCustomViews } from 'dashboard/helper/customViewsHelper';
@@ -185,6 +186,23 @@ const activeFolder = computed(() => {
 
 const activeFolderName = computed(() => {
   return activeFolder.value?.name;
+});
+
+const selectedConversationInbox = computed(() => {
+  const inboxId = Number(props.conversationInbox || 0);
+
+  if (!inboxId) {
+    return null;
+  }
+
+  return store.getters['inboxes/getInbox'](inboxId);
+});
+
+const isWhatsAppLayout = computed(() => {
+  return shouldUseWhatsAppConversationLayout(
+    uiSettings.value,
+    selectedConversationInbox.value
+  );
 });
 
 const hasActiveFolders = computed(() => {
@@ -904,10 +922,15 @@ watch(conversationFilters, (newVal, oldVal) => {
 
 <template>
   <div
-    class="flex flex-col flex-shrink-0 conversations-list-wrap bg-n-surface-1"
+    class="flex flex-col flex-shrink-0 conversations-list-wrap"
     :class="[
+      isWhatsAppLayout ? 'bg-[#f0f2f5]' : 'bg-n-surface-1',
       { hidden: !showConversationList },
-      isOnExpandedLayout ? 'basis-full' : 'w-[340px] 2xl:w-[412px]',
+      isOnExpandedLayout
+        ? 'basis-full'
+        : isWhatsAppLayout
+          ? 'w-[360px] 2xl:w-[440px]'
+          : 'w-[340px] 2xl:w-[412px]',
     ]"
   >
     <slot />
@@ -916,6 +939,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       :has-applied-filters="hasAppliedFilters"
       :has-active-folders="hasActiveFolders"
       :active-status="activeStatus"
+      :is-whats-app-layout="isWhatsAppLayout"
       :is-on-expanded-layout="isOnExpandedLayout"
       :conversation-stats="conversationStats"
       :is-list-loading="chatListLoading && !conversationList.length"
@@ -951,6 +975,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       v-if="!hasAppliedFiltersOrActiveFolders"
       :items="assigneeTabItems"
       :active-tab="activeAssigneeTab"
+      :is-whats-app-layout="isWhatsAppLayout"
       is-compact
       @chat-tab-change="updateAssigneeTab"
     />
@@ -958,6 +983,7 @@ watch(conversationFilters, (newVal, oldVal) => {
     <p
       v-if="!chatListLoading && !conversationList.length"
       class="flex overflow-auto justify-center items-center p-4"
+      :class="isWhatsAppLayout ? 'bg-white text-[#667781]' : ''"
     >
       {{ $t('CHAT_LIST.LIST.404') }}
     </p>
@@ -978,7 +1004,10 @@ watch(conversationFilters, (newVal, oldVal) => {
     <div
       ref="conversationListRef"
       class="overflow-hidden flex-1 conversations-list hover:overflow-y-auto"
-      :class="{ 'overflow-hidden': isContextMenuOpen }"
+      :class="[
+        isWhatsAppLayout ? 'bg-white' : '',
+        { 'overflow-hidden': isContextMenuOpen },
+      ]"
     >
       <DynamicScroller
         ref="conversationDynamicScroller"

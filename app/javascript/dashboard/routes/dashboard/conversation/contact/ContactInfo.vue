@@ -40,6 +40,10 @@ export default {
       type: Boolean,
       default: true,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['panelClose'],
   setup() {
@@ -174,7 +178,10 @@ export default {
 </script>
 
 <template>
-  <div class="relative items-center w-full p-4">
+  <div
+    class="contact-info relative items-center w-full p-4"
+    :class="isWhatsAppLayout ? 'contact-info--whatsapp pt-5' : ''"
+  >
     <div class="flex flex-col w-full gap-2 text-left rtl:text-right">
       <div class="flex flex-row justify-between">
         <Avatar
@@ -182,7 +189,7 @@ export default {
           :src="contact.thumbnail"
           :name="contact.name"
           :status="contact.availability_status"
-          :size="48"
+          :size="isWhatsAppLayout ? 56 : 48"
           hide-offline-status
           rounded-full
         />
@@ -191,7 +198,12 @@ export default {
       <div class="flex flex-col items-start gap-1.5 min-w-0 w-full">
         <div v-if="showAvatar" class="flex items-center w-full min-w-0 gap-3">
           <h3
-            class="flex-shrink max-w-full min-w-0 my-0 text-base capitalize break-words text-n-slate-12"
+            class="flex-shrink max-w-full min-w-0 my-0 capitalize break-words"
+            :class="
+              isWhatsAppLayout
+                ? 'text-[1.05rem] font-medium text-[#111b21]'
+                : 'text-base text-n-slate-12'
+            "
           >
             {{ contact.name }}
           </h3>
@@ -216,16 +228,24 @@ export default {
           </div>
         </div>
 
-        <p v-if="additionalAttributes.description" class="break-words mb-0.5">
+        <p
+          v-if="additionalAttributes.description"
+          class="break-words mb-0.5"
+          :class="isWhatsAppLayout ? 'text-[#54656f]' : ''"
+        >
           {{ additionalAttributes.description }}
         </p>
-        <div class="flex flex-col items-start w-full gap-2">
+        <div
+          class="flex flex-col items-start w-full gap-2"
+          :class="isWhatsAppLayout ? 'contact-info__rows' : ''"
+        >
           <ContactInfoRow
             :href="contact.email ? `mailto:${contact.email}` : ''"
             :value="contact.email"
             icon="mail"
             emoji="✉️"
             :title="$t('CONTACT_PANEL.EMAIL_ADDRESS')"
+            :is-whats-app-layout="isWhatsAppLayout"
             show-copy
           />
           <ContactInfoRow
@@ -234,6 +254,7 @@ export default {
             icon="call"
             emoji="📞"
             :title="$t('CONTACT_PANEL.PHONE_NUMBER')"
+            :is-whats-app-layout="isWhatsAppLayout"
             show-copy
           />
           <ContactInfoRow
@@ -242,12 +263,14 @@ export default {
             icon="contact-identify"
             emoji="🪪"
             :title="$t('CONTACT_PANEL.IDENTIFIER')"
+            :is-whats-app-layout="isWhatsAppLayout"
           />
           <ContactInfoRow
             :value="additionalAttributes.company_name"
             icon="building-bank"
             emoji="🏢"
             :title="$t('CONTACT_PANEL.COMPANY')"
+            :is-whats-app-layout="isWhatsAppLayout"
           />
           <ContactInfoRow
             v-if="location || additionalAttributes.location"
@@ -255,11 +278,18 @@ export default {
             icon="map"
             emoji="🌍"
             :title="$t('CONTACT_PANEL.LOCATION')"
+            :is-whats-app-layout="isWhatsAppLayout"
           />
-          <SocialIcons :social-profiles="socialProfiles" />
+          <SocialIcons
+            :social-profiles="socialProfiles"
+            :is-whats-app-layout="isWhatsAppLayout"
+          />
         </div>
       </div>
-      <div class="flex items-center w-full mt-0.5 gap-2">
+      <div
+        class="flex items-center w-full mt-0.5 gap-2"
+        :class="isWhatsAppLayout ? 'contact-info__actions mt-2 pt-1' : ''"
+      >
         <ComposeConversation
           :contact-id="String(contact.id)"
           is-modal
@@ -335,3 +365,23 @@ export default {
     />
   </div>
 </template>
+
+<style scoped lang="scss">
+.contact-info--whatsapp {
+  @apply mx-3 mb-1 rounded-[1.75rem] border border-[#dfe5e7] bg-white;
+  box-shadow: 0 1px 2px rgba(17, 27, 33, 0.05);
+
+  .contact-info__rows {
+    @apply gap-2.5;
+  }
+
+  :deep(.contact-info__actions button) {
+    @apply rounded-full border-0 text-[#54656f];
+    background-color: #f0f2f5;
+  }
+
+  :deep(.contact-info__actions button:hover) {
+    background-color: #e9edef;
+  }
+}
+</style>

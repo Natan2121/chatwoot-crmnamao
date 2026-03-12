@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import {
   VOICE_CALL_STATUS,
   VOICE_CALL_DIRECTION,
@@ -10,7 +11,10 @@ const props = defineProps({
   status: { type: String, default: '' },
   direction: { type: String, default: '' },
   messagePreviewClass: { type: [String, Array, Object], default: '' },
+  isWhatsAppLayout: { type: Boolean, default: false },
 });
+
+const { t } = useI18n();
 
 const LABEL_KEYS = {
   [VOICE_CALL_STATUS.IN_PROGRESS]: 'CONVERSATION.VOICE_CALL.CALL_IN_PROGRESS',
@@ -58,20 +62,27 @@ const iconName = computed(() => {
 const statusColor = computed(
   () => COLOR_MAP[props.status] || 'text-n-slate-11'
 );
+// eslint-disable-next-line @intlify/vue-i18n/no-dynamic-keys
+const label = computed(() => t(labelKey.value));
+
+const wrapperClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'my-0 flex h-6 min-w-0 flex-1 items-center overflow-hidden text-ellipsis whitespace-nowrap rounded-full bg-[#f0f2f5] px-2.5 text-[12px] leading-6'
+    : 'my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm overflow-hidden text-ellipsis whitespace-nowrap';
+});
+
+const iconClass = computed(() => {
+  return props.isWhatsAppLayout
+    ? 'inline-block align-middle size-3.5'
+    : 'inline-block -mt-0.5 align-middle size-4';
+});
 </script>
 
 <template>
-  <div
-    class="my-0 mx-2 leading-6 h-6 flex-1 min-w-0 text-sm overflow-hidden text-ellipsis whitespace-nowrap"
-    :class="messagePreviewClass"
-  >
-    <Icon
-      class="inline-block -mt-0.5 align-middle size-4"
-      :icon="iconName"
-      :class="statusColor"
-    />
+  <div :class="[wrapperClass, messagePreviewClass]">
+    <Icon :class="[iconClass, statusColor]" :icon="iconName" />
     <span class="mx-1" :class="statusColor">
-      {{ $t(labelKey) }}
+      {{ label }}
     </span>
   </div>
 </template>

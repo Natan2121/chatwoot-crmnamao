@@ -7,6 +7,10 @@ defineProps({
     type: Object,
     required: true,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['dismiss']);
@@ -14,9 +18,19 @@ const emit = defineEmits(['dismiss']);
 
 <template>
   <div
-    class="reply-editor bg-n-slate-9/10 rounded-md py-1 pl-2 pr-1 text-xs tracking-wide mt-2 flex items-center gap-1.5 -mx-2"
+    class="reply-editor mt-2 flex items-center gap-1.5 text-xs tracking-wide"
+    :class="
+      isWhatsAppLayout
+        ? '-mx-1 rounded-2xl border-l-4 border-[#25d366] bg-[#f0f2f5] px-3 py-2 text-[#54656f]'
+        : 'bg-n-slate-9/10 rounded-md py-1 pl-2 pr-1 -mx-2'
+    "
   >
-    <fluent-icon class="flex-shrink-0 icon" icon="arrow-reply" size="14" />
+    <fluent-icon
+      class="flex-shrink-0 icon"
+      :class="isWhatsAppLayout ? 'text-[#25d366]' : ''"
+      icon="arrow-reply"
+      size="14"
+    />
     <div class="flex-grow gap-1 mt-px text-xs truncate">
       {{ $t('CONVERSATION.REPLYBOX.REPLYING_TO') }}
       <MessagePreview

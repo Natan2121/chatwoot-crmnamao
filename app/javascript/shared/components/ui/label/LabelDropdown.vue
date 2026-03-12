@@ -27,6 +27,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['update', 'add', 'remove'],
 
@@ -34,6 +38,7 @@ export default {
     return {
       search: '',
       createModalVisible: false,
+      hotkeyLabel: 'L',
     };
   },
 
@@ -111,17 +116,25 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col w-full max-h-[12.5rem]">
+  <div
+    class="flex flex-col w-full max-h-[12.5rem]"
+    :class="isWhatsAppLayout ? 'label-dropdown--whatsapp' : ''"
+  >
     <div class="flex items-center justify-center mb-1">
       <h4
-        class="flex-grow m-0 overflow-hidden text-sm text-n-slate-12 whitespace-nowrap text-ellipsis"
+        class="flex-grow m-0 overflow-hidden text-sm whitespace-nowrap text-ellipsis"
+        :class="isWhatsAppLayout ? 'text-[#111b21]' : 'text-n-slate-12'"
       >
         {{ $t('CONTACT_PANEL.LABELS.LABEL_SELECT.TITLE') }}
       </h4>
       <Hotkey
-        custom-class="border border-solid text-n-slate-12 bg-n-slate-2 text-xxs border-n-strong flex-shrink-0"
+        :custom-class="
+          isWhatsAppLayout
+            ? 'border border-solid border-[#dfe5e7] bg-[#f7f8fa] text-[#54656f] text-xxs flex-shrink-0'
+            : 'border border-solid text-n-slate-12 bg-n-slate-2 text-xxs border-n-strong flex-shrink-0'
+        "
       >
-        {{ 'L' }}
+        {{ hotkeyLabel }}
       </Hotkey>
     </div>
     <div class="flex-auto flex-grow-0 flex-shrink-0 mb-2 max-h-8">
@@ -130,6 +143,7 @@ export default {
         v-model="search"
         type="text"
         class="search-input"
+        :class="isWhatsAppLayout ? 'search-input--whatsapp' : ''"
         autofocus="true"
         :placeholder="$t('CONTACT_PANEL.LABELS.LABEL_SELECT.PLACEHOLDER')"
       />
@@ -145,6 +159,7 @@ export default {
             :title="label.title"
             :color="label.color"
             :selected="selectedLabels.includes(label.title)"
+            :is-whats-app-layout="isWhatsAppLayout"
             @select-label="onAddRemove(label)"
           />
         </woot-dropdown-menu>
@@ -163,6 +178,7 @@ export default {
             slate
             sm
             ghost
+            :class="isWhatsAppLayout ? 'label-dropdown__create' : ''"
             :label="`${createLabelPlaceholder} ${parsedSearch}`"
             :disabled="hasExactMatchInResults"
             @click="showCreateModal"
@@ -182,3 +198,19 @@ export default {
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.label-dropdown--whatsapp {
+  .search-input--whatsapp {
+    @apply rounded-2xl border border-[#dfe5e7] bg-[#f7f8fa] px-3 text-[#111b21];
+  }
+
+  :deep(.label-dropdown__create button) {
+    @apply rounded-2xl border border-transparent text-[#008069];
+  }
+
+  :deep(.label-dropdown__create button:hover) {
+    background-color: #f7f8fa;
+  }
+}
+</style>

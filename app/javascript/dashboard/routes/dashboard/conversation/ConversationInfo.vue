@@ -13,6 +13,10 @@ const props = defineProps({
     type: Object,
     default: () => ({}),
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const referer = computed(() => props.conversationAttributes.referer);
@@ -97,6 +101,7 @@ const staticElements = computed(() =>
           :key="element.title"
           :title="$t(element.title)"
           :value="element.content.value"
+          :is-whats-app-layout="isWhatsAppLayout"
         >
           <a
             v-if="element.key === 'static-referer'"

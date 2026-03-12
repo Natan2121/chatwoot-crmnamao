@@ -13,6 +13,7 @@ const props = defineProps({
   hasAppliedFilters: { type: Boolean, required: true },
   hasActiveFolders: { type: Boolean, required: true },
   activeStatus: { type: String, required: true },
+  isWhatsAppLayout: { type: Boolean, required: false, default: false },
   isOnExpandedLayout: { type: Boolean, required: true },
   conversationStats: { type: Object, required: true },
   isListLoading: { type: Boolean, required: true },
@@ -57,14 +58,25 @@ const toggleConversationLayout = () => {
 
 <template>
   <div
-    class="flex items-center justify-between gap-2 px-3 h-[3.25rem]"
-    :class="{
-      'border-b border-n-strong': hasAppliedFiltersOrActiveFolders,
-    }"
+    class="chat-list-header flex items-center justify-between gap-2"
+    :class="[
+      props.isWhatsAppLayout
+        ? 'chat-list-header--whatsapp h-[4.5rem] border-b border-[#d1d7db] bg-[#f0f2f5] px-4'
+        : 'h-[3.25rem] px-3',
+      {
+        'border-b border-n-strong':
+          hasAppliedFiltersOrActiveFolders && !props.isWhatsAppLayout,
+      },
+    ]"
   >
     <div class="flex items-center justify-center min-w-0">
       <h1
-        class="text-base font-medium truncate text-n-slate-12"
+        class="truncate"
+        :class="
+          props.isWhatsAppLayout
+            ? 'text-[19px] font-semibold text-[#111b21]'
+            : 'text-base font-medium text-n-slate-12'
+        "
         :title="pageTitle"
       >
         {{ pageTitle }}
@@ -73,19 +85,22 @@ const toggleConversationLayout = () => {
         v-if="
           allCount > 0 && hasAppliedFiltersOrActiveFolders && !isListLoading
         "
-        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
+        class="chat-list-header__badge shrink-0 capitalize"
         :title="allCount"
       >
         {{ formattedAllCount }}
       </span>
       <span
         v-if="!hasAppliedFiltersOrActiveFolders"
-        class="px-2 py-1 my-0.5 mx-1 rounded-md capitalize bg-n-slate-3 text-xxs text-n-slate-12 shrink-0"
+        class="chat-list-header__badge shrink-0 capitalize"
       >
         {{ $t(`CHAT_LIST.CHAT_STATUS_FILTER_ITEMS.${activeStatus}.TEXT`) }}
       </span>
     </div>
-    <div class="flex items-center gap-1">
+    <div
+      class="chat-list-header__actions flex items-center"
+      :class="props.isWhatsAppLayout ? 'gap-2' : 'gap-1'"
+    >
       <template v-if="hasAppliedFilters && !hasActiveFolders">
         <div class="relative">
           <NextButton
@@ -157,12 +172,39 @@ const toggleConversationLayout = () => {
       <ConversationBasicFilter
         v-if="!hasAppliedFiltersOrActiveFolders"
         :is-on-expanded-layout="isOnExpandedLayout"
+        :is-whats-app-layout="props.isWhatsAppLayout"
         @change-filter="onBasicFilterChange"
       />
       <SwitchLayout
         :is-on-expanded-layout="isOnExpandedLayout"
+        :is-whats-app-layout="props.isWhatsAppLayout"
         @toggle="toggleConversationLayout"
       />
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.chat-list-header__badge {
+  @apply my-0.5 mx-1 rounded-md bg-n-slate-3 px-2 py-1 text-xxs text-n-slate-12;
+}
+
+.chat-list-header--whatsapp {
+  .chat-list-header__badge {
+    @apply rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#54656f];
+    box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+  }
+
+  .chat-list-header__actions {
+    :deep(button) {
+      @apply rounded-full border-0 text-[#54656f];
+      background-color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 1px 2px rgba(11, 20, 26, 0.08);
+    }
+
+    :deep(button:hover) {
+      background-color: #ffffff;
+    }
+  }
+}
+</style>

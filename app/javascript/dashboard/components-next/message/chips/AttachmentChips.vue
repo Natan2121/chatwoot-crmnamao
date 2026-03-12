@@ -34,10 +34,14 @@ defineOptions({
 });
 
 const attrs = useAttrs();
-const { orientation } = useMessageContext();
+const { orientation, isWhatsAppLayout } = useMessageContext();
 
 const classToApply = computed(() => {
   const baseClasses = [attrs.class, 'flex', 'flex-wrap'];
+
+  if (isWhatsAppLayout.value) {
+    baseClasses.push('gap-1.5');
+  }
 
   if (orientation.value === 'right') {
     baseClasses.push('justify-end');
@@ -73,10 +77,56 @@ const files = computed(() => {
     attachment => attachment.fileType === ATTACHMENT_TYPES.FILE
   );
 });
+
+const mediaClassToApply = computed(() => {
+  if (isWhatsAppLayout.value) {
+    return [
+      attrs.class,
+      'grid',
+      'max-w-[19rem]',
+      mediaAttachments.value.length > 1 ? 'grid-cols-2 gap-1.5' : 'grid-cols-1',
+      orientation.value === 'right'
+        ? 'justify-items-end'
+        : 'justify-items-start',
+    ];
+  }
+
+  return classToApply.value;
+});
+
+const recordingClassToApply = computed(() => {
+  if (isWhatsAppLayout.value) {
+    return [
+      attrs.class,
+      'flex',
+      'max-w-[19rem]',
+      'flex-col',
+      'gap-2',
+      orientation.value === 'right' ? 'items-end' : 'items-start',
+    ];
+  }
+
+  return classToApply.value;
+});
+
+const fileClassToApply = computed(() => {
+  if (isWhatsAppLayout.value) {
+    return [
+      attrs.class,
+      'flex',
+      'max-w-[19rem]',
+      'flex-col',
+      'gap-2',
+      orientation.value === 'right' ? 'items-end' : 'items-start',
+    ];
+  }
+
+  return classToApply.value;
+});
 </script>
 
 <template>
-  <div v-if="mediaAttachments.length" :class="classToApply">
+  <div v-if="mediaAttachments.length" :class="mediaClassToApply">
     <template v-for="attachment in mediaAttachments" :key="attachment.id">
       <ImageChip
         v-if="attachment.fileType === ATTACHMENT_TYPES.IMAGE"
@@ -88,15 +138,19 @@ const files = computed(() => {
       />
     </template>
   </div>
-  <div v-if="recordings.length" :class="classToApply">
+  <div v-if="recordings.length" :class="recordingClassToApply">
     <div v-for="attachment in recordings" :key="attachment.id">
       <AudioChip
-        class="bg-n-alpha-3 dark:bg-n-alpha-2 text-n-slate-12"
+        :class="
+          isWhatsAppLayout
+            ? 'w-full bg-transparent text-[#111b21]'
+            : 'bg-n-alpha-3 dark:bg-n-alpha-2 text-n-slate-12'
+        "
         :attachment="attachment"
       />
     </div>
   </div>
-  <div v-if="files.length" :class="classToApply">
+  <div v-if="files.length" :class="fileClassToApply">
     <FileChip
       v-for="attachment in files"
       :key="attachment.id"

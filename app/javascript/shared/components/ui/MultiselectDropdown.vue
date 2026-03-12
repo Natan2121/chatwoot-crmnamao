@@ -40,6 +40,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isWhatsAppLayout: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits(['select']);
@@ -61,7 +65,11 @@ const hasValue = computed(() => {
 
 <template>
   <OnClickOutside @trigger="onCloseDropdown">
-    <div class="relative w-full mb-2" @keyup.esc="onCloseDropdown">
+    <div
+      class="multiselect-dropdown relative w-full mb-2"
+      :class="isWhatsAppLayout ? 'multiselect-dropdown--whatsapp' : ''"
+      @keyup.esc="onCloseDropdown"
+    >
       <Button
         slate
         outline
@@ -70,6 +78,7 @@ const hasValue = computed(() => {
           showSearchDropdown ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'
         "
         class="w-full !px-2"
+        :class="isWhatsAppLayout ? 'multiselect-dropdown__button' : ''"
         type="button"
         :disabled="disabled"
         @click="
@@ -77,12 +86,17 @@ const hasValue = computed(() => {
         "
       >
         <div class="flex items-center justify-between w-full min-w-0">
-          <h4 v-if="!hasValue" class="text-sm text-ellipsis text-n-slate-12">
+          <h4
+            v-if="!hasValue"
+            class="text-sm text-ellipsis"
+            :class="isWhatsAppLayout ? 'text-[#667781]' : 'text-n-slate-12'"
+          >
             {{ multiselectorPlaceholder }}
           </h4>
           <h4
             v-else
-            class="items-center overflow-hidden text-sm leading-tight whitespace-nowrap text-ellipsis text-n-slate-12"
+            class="items-center overflow-hidden text-sm leading-tight whitespace-nowrap text-ellipsis"
+            :class="isWhatsAppLayout ? 'text-[#111b21]' : 'text-n-slate-12'"
             :title="selectedItem.name"
           >
             {{ selectedItem.name }}
@@ -100,20 +114,33 @@ const hasValue = computed(() => {
       </Button>
       <!-- NOTE: Without @click.prevent, the dropdown does not behave as expected when used inside a <label> tag. -->
       <div
-        :class="{
-          'block visible': showSearchDropdown,
-          'hidden invisible': !showSearchDropdown,
-        }"
-        class="box-border top-[2.625rem] w-full border rounded-lg bg-n-alpha-3 backdrop-blur-[100px] absolute shadow-lg border-n-strong dark:border-n-strong p-2 z-[9999]"
+        class="box-border top-[2.625rem] w-full absolute p-2 z-[9999]"
+        :class="[
+          {
+            'block visible': showSearchDropdown,
+            'hidden invisible': !showSearchDropdown,
+          },
+          isWhatsAppLayout
+            ? 'multiselect-dropdown__menu rounded-2xl border border-[#dfe5e7] bg-white shadow-[0_12px_32px_rgba(17,27,33,0.12)]'
+            : 'border rounded-lg bg-n-alpha-3 backdrop-blur-[100px] shadow-lg border-n-strong dark:border-n-strong',
+        ]"
         @click.prevent
       >
         <div class="flex items-center justify-between mb-1">
           <h4
-            class="m-0 overflow-hidden text-sm text-n-slate-11 whitespace-nowrap text-ellipsis"
+            class="m-0 overflow-hidden text-sm whitespace-nowrap text-ellipsis"
+            :class="isWhatsAppLayout ? 'text-[#111b21]' : 'text-n-slate-11'"
           >
             {{ multiselectorTitle }}
           </h4>
-          <Button ghost slate xs icon="i-lucide-x" @click="onCloseDropdown" />
+          <Button
+            ghost
+            slate
+            xs
+            icon="i-lucide-x"
+            :class="isWhatsAppLayout ? 'multiselect-dropdown__close' : ''"
+            @click="onCloseDropdown"
+          />
         </div>
         <MultiselectDropdownItems
           v-if="showSearchDropdown"
@@ -122,9 +149,35 @@ const hasValue = computed(() => {
           :has-thumbnail="hasThumbnail"
           :input-placeholder="inputPlaceholder"
           :no-search-result="noSearchResult"
+          :is-whats-app-layout="isWhatsAppLayout"
           @select="onClickSelectItem"
         />
       </div>
     </div>
   </OnClickOutside>
 </template>
+
+<style scoped lang="scss">
+.multiselect-dropdown--whatsapp {
+  :deep(.multiselect-dropdown__button) {
+    @apply rounded-2xl border border-[#dfe5e7] bg-white px-3 py-2 shadow-none;
+  }
+
+  :deep(.multiselect-dropdown__button:hover) {
+    background-color: #f7f8fa;
+  }
+
+  :deep(.multiselect-dropdown__button .button__icon) {
+    @apply text-[#54656f];
+  }
+
+  :deep(.multiselect-dropdown__close) {
+    @apply rounded-full border-0 text-[#54656f];
+    background-color: #f7f8fa;
+  }
+
+  :deep(.multiselect-dropdown__close:hover) {
+    background-color: #f0f2f5;
+  }
+}
+</style>

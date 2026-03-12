@@ -33,6 +33,10 @@ export default {
       type: String,
       default: 'No results found',
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['select'],
 
@@ -72,13 +76,17 @@ export default {
 </script>
 
 <template>
-  <div class="dropdown-wrap">
+  <div
+    class="dropdown-wrap"
+    :class="isWhatsAppLayout ? 'dropdown-wrap--whatsapp' : ''"
+  >
     <div class="flex-auto flex-grow-0 flex-shrink-0 mb-2 max-h-8">
       <input
         ref="searchbar"
         v-model="search"
         type="text"
         class="search-input"
+        :class="isWhatsAppLayout ? 'search-input--whatsapp' : ''"
         autofocus="true"
         :placeholder="inputPlaceholder"
       />
@@ -93,6 +101,7 @@ export default {
               trailing-icon
               :icon="isActive(option) ? 'i-lucide-check' : ''"
               class="w-full !px-2.5"
+              :class="isWhatsAppLayout ? 'dropdown-item-button--whatsapp' : ''"
               @click="() => onclick(option)"
             >
               <div
@@ -135,6 +144,20 @@ export default {
 
 .search-input {
   @apply m-0 w-full border border-solid border-transparent h-8 text-sm text-n-slate-12 rounded-md focus:border-n-brand bg-n-background dark:bg-n-background;
+}
+
+.dropdown-wrap--whatsapp {
+  .search-input--whatsapp {
+    @apply rounded-2xl border border-[#dfe5e7] bg-[#f7f8fa] px-3 text-[#111b21];
+  }
+
+  :deep(.dropdown-item-button--whatsapp) {
+    @apply rounded-2xl border border-transparent py-2;
+  }
+
+  :deep(.dropdown-item-button--whatsapp:hover) {
+    background-color: #f7f8fa;
+  }
 }
 
 .multiselect-dropdown--item {

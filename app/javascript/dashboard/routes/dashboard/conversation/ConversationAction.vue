@@ -23,6 +23,10 @@ export default {
       type: [Number, String],
       required: true,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
   },
   setup() {
     const { agentsList } = useAgentsList();
@@ -210,11 +214,15 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div
+    class="conversation-action"
+    :class="isWhatsAppLayout ? 'conversation-action--whatsapp' : ''"
+  >
     <div class="multiselect-wrap--small">
       <ContactDetailsItem
         compact
         :title="$t('CONVERSATION_SIDEBAR.ASSIGNEE_LABEL')"
+        :is-whats-app-layout="isWhatsAppLayout"
       >
         <template #button>
           <NextButton
@@ -223,6 +231,7 @@ export default {
             xs
             icon="i-lucide-arrow-right"
             class="!gap-1"
+            :class="isWhatsAppLayout ? 'conversation-action__quick-link' : ''"
             :label="$t('CONVERSATION_SIDEBAR.SELF_ASSIGN')"
             @click="onSelfAssign"
           />
@@ -239,6 +248,7 @@ export default {
         :input-placeholder="
           $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.AGENT')
         "
+        :is-whats-app-layout="isWhatsAppLayout"
         @select="onClickAssignAgent"
       />
     </div>
@@ -246,6 +256,7 @@ export default {
       <ContactDetailsItem
         compact
         :title="$t('CONVERSATION_SIDEBAR.TEAM_LABEL')"
+        :is-whats-app-layout="isWhatsAppLayout"
       />
       <MultiselectDropdown
         :options="teamsList"
@@ -258,11 +269,16 @@ export default {
         :input-placeholder="
           $t('AGENT_MGMT.MULTI_SELECTOR.SEARCH.PLACEHOLDER.TEAM')
         "
+        :is-whats-app-layout="isWhatsAppLayout"
         @select="onClickAssignTeam"
       />
     </div>
     <div class="multiselect-wrap--small">
-      <ContactDetailsItem compact :title="$t('CONVERSATION.PRIORITY.TITLE')" />
+      <ContactDetailsItem
+        compact
+        :title="$t('CONVERSATION.PRIORITY.TITLE')"
+        :is-whats-app-layout="isWhatsAppLayout"
+      />
       <MultiselectDropdown
         :options="priorityOptions"
         :selected-item="assignedPriority"
@@ -276,13 +292,34 @@ export default {
         :input-placeholder="
           $t('CONVERSATION.PRIORITY.CHANGE_PRIORITY.INPUT_PLACEHOLDER')
         "
+        :is-whats-app-layout="isWhatsAppLayout"
         @select="onClickAssignPriority"
       />
     </div>
     <ContactDetailsItem
       compact
       :title="$t('CONVERSATION_SIDEBAR.ACCORDION.CONVERSATION_LABELS')"
+      :is-whats-app-layout="isWhatsAppLayout"
     />
-    <ConversationLabels :conversation-id="conversationId" />
+    <ConversationLabels
+      :conversation-id="conversationId"
+      :is-whats-app-layout="isWhatsAppLayout"
+    />
   </div>
 </template>
+
+<style scoped lang="scss">
+.multiselect-wrap--small {
+  :deep(.multiselect) {
+    min-height: 3rem;
+  }
+}
+
+.conversation-action--whatsapp {
+  @apply rounded-2xl border border-[#e3e6e8] bg-[#f7f8fa] p-3;
+
+  :deep(.conversation-action__quick-link button) {
+    @apply text-[#008069];
+  }
+}
+</style>

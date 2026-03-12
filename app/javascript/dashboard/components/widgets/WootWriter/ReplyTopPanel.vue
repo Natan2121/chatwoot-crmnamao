@@ -37,6 +37,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    isWhatsAppLayout: {
+      type: Boolean,
+      default: false,
+    },
     conversationId: {
       type: Number,
       default: null,
@@ -142,12 +146,18 @@ export default {
 
 <template>
   <div
-    class="flex justify-between gap-2 h-[3.25rem] items-center ltr:pl-3 ltr:pr-2 rtl:pr-3 rtl:pl-2"
+    class="reply-top-panel flex justify-between gap-2 items-center"
+    :class="
+      isWhatsAppLayout
+        ? 'reply-top-panel--whatsapp h-12 ltr:pl-4 ltr:pr-3 rtl:pr-4 rtl:pl-3'
+        : 'h-[3.25rem] ltr:pl-3 ltr:pr-2 rtl:pr-3 rtl:pl-2'
+    "
   >
     <EditorModeToggle
       :mode="mode"
       :disabled="disabled"
       :is-reply-restricted="isReplyRestricted"
+      :is-whats-app-layout="isWhatsAppLayout"
       @toggle-mode="handleModeToggle"
     />
     <div class="flex items-center mx-4 my-0">
@@ -188,3 +198,17 @@ export default {
     </div>
   </div>
 </template>
+
+<style scoped lang="scss">
+.reply-top-panel--whatsapp {
+  :deep(button) {
+    @apply border-0;
+    background-color: #f0f2f5;
+    color: #54656f;
+  }
+
+  :deep(button:hover) {
+    background-color: #e9edef;
+  }
+}
+</style>

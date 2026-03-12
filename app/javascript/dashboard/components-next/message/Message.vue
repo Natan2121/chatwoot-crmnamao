@@ -4,6 +4,7 @@ import { useTimeoutFn } from '@vueuse/core';
 import { provideMessageContext } from './provider.js';
 import { useTrack } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
+import { useUISettings } from 'dashboard/composables/useUISettings';
 import { emitter } from 'shared/helpers/mitt';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
@@ -11,6 +12,7 @@ import { LocalStorage } from 'shared/helpers/localStorage';
 import { ACCOUNT_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { getInboxIconByType } from 'dashboard/helper/inbox';
+import { shouldUseWhatsAppConversationLayout } from 'dashboard/helper/conversationAppearance';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import {
   MESSAGE_TYPES,
@@ -146,9 +148,13 @@ const showBackgroundHighlight = ref(false);
 const showContextMenu = ref(false);
 const { t } = useI18n();
 const route = useRoute();
+const { uiSettings } = useUISettings();
 const inboxGetter = useMapGetter('inboxes/getInbox');
 const inbox = computed(() => inboxGetter.value(props.inboxId) || {});
 const { replaceInstallationName } = useBranding();
+const isWhatsAppLayout = computed(() =>
+  shouldUseWhatsAppConversationLayout(uiSettings.value, inbox.value)
+);
 
 /**
  * Computes the message variant based on props
@@ -246,6 +252,10 @@ const flexOrientationClass = computed(() => {
 });
 
 const gridClass = computed(() => {
+  if (isWhatsAppLayout.value) {
+    return 'grid grid-cols-1fr';
+  }
+
   const map = {
     [ORIENTATION.LEFT]: 'grid grid-cols-1fr',
     [ORIENTATION.RIGHT]: 'grid grid-cols-[1fr_24px]',
@@ -255,6 +265,13 @@ const gridClass = computed(() => {
 });
 
 const gridTemplate = computed(() => {
+  if (isWhatsAppLayout.value) {
+    return `
+      "bubble"
+      "meta"
+    `;
+  }
+
   const map = {
     [ORIENTATION.LEFT]: `
       "bubble"
@@ -277,6 +294,7 @@ const shouldGroupWithNext = computed(() => {
 
 const shouldShowAvatar = computed(() => {
   if (props.messageType === MESSAGE_TYPES.ACTIVITY) return false;
+  if (isWhatsAppLayout.value) return false;
   if (orientation.value === ORIENTATION.LEFT) return false;
 
   return true;
@@ -519,6 +537,7 @@ onMounted(setupHighlightTimer);
 provideMessageContext({
   ...toRefs(props),
   isPrivate: computed(() => props.private),
+  isWhatsAppLayout,
   variant,
   orientation,
   isBotOrAgentMessage,
@@ -531,10 +550,11 @@ provideMessageContext({
   <div
     v-if="shouldRenderMessage"
     :id="`message${props.id}`"
-    class="flex w-full mb-2 message-bubble-container"
+    class="flex w-full message-bubble-container"
     :data-message-id="props.id"
     :class="[
       flexOrientationClass,
+      isWhatsAppLayout ? 'mb-1.5' : 'mb-2',
       {
         'group-with-next': shouldGroupWithNext,
         'bg-n-alpha-1': showBackgroundHighlight,
@@ -568,8 +588,13 @@ provideMessageContext({
       <div
         class="[grid-area:bubble] flex"
         :class="{
-          'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
-          'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
+          'ltr:ml-8 rtl:mr-8 justify-end':
+            orientation === ORIENTATION.RIGHT && !isWhatsAppLayout,
+          'ltr:mr-8 rtl:ml-8':
+            orientation === ORIENTATION.LEFT && !isWhatsAppLayout,
+          'justify-end w-full':
+            orientation === ORIENTATION.RIGHT && isWhatsAppLayout,
+          'w-full': orientation === ORIENTATION.LEFT && isWhatsAppLayout,
           'min-w-0': variant === MESSAGE_VARIANTS.EMAIL,
         }"
         @contextmenu="openContextMenu($event)"
