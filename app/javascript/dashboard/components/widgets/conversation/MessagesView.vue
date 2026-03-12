@@ -307,7 +307,7 @@ export default {
       const existingLabels = this.currentChat?.labels || [];
       if (existingLabels.length > 0) return;
 
-      if (!this.captainTasksEnabled || !this.isLabelSuggestionFeatureEnabled) {
+      if (!this.captainTasksEnabled) {
         return;
       }
 

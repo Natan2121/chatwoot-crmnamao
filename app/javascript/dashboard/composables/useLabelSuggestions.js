@@ -24,6 +24,7 @@ export function useLabelSuggestions() {
   const appIntegrations = useMapGetter('integrations/getAppIntegrations');
   const currentChat = useMapGetter('getSelectedChat');
   const conversationId = computed(() => currentChat.value?.id);
+  let integrationsFetchPromise = null;
 
   const captainTasksEnabled = computed(() => {
     return isCloudFeatureEnabled(FEATURE_FLAGS.CAPTAIN_TASKS);
@@ -45,9 +46,18 @@ export function useLabelSuggestions() {
   });
 
   const fetchIntegrationsIfRequired = async () => {
-    if (!appIntegrations.value.length) {
-      await store.dispatch('integrations/get');
+    if (appIntegrations.value.length) return appIntegrations.value;
+
+    if (!integrationsFetchPromise) {
+      integrationsFetchPromise = store
+        .dispatch('integrations/get')
+        .finally(() => {
+          integrationsFetchPromise = null;
+        });
     }
+
+    await integrationsFetchPromise;
+    return appIntegrations.value;
   };
 
   /**
@@ -58,6 +68,12 @@ export function useLabelSuggestions() {
     if (!conversationId.value) return [];
 
     try {
+      await fetchIntegrationsIfRequired();
+
+      if (!isLabelSuggestionFeatureEnabled.value) {
+        return [];
+      }
+
       const result = await TasksAPI.labelSuggestion(conversationId.value);
       const {
         data: { message: labels },
