@@ -1,6 +1,8 @@
 {
   "GENERAL": {
     "SHOWING_RESULTS": "Mostrando {firstIndex}—{lastIndex} de {totalCount} itens",
+    "ACCEPT": "Aceitar",
+    "DISCARD": "Descartar",
     "PHONE_INPUT": {
       "PLACEHOLDER": "Pesquisar",
       "EMPTY_STATE": "Nenhum resultado encontrado"

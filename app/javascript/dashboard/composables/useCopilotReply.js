@@ -14,12 +14,9 @@ const REWRITE_ACTIONS = [
   'fix_spelling_grammar',
   'casual',
   'professional',
-  'expand',
-  'shorten',
-  'rephrase',
-  'make_friendly',
-  'make_formal',
-  'simplify',
+  'straightforward',
+  'confident',
+  'friendly',
 ];
 
 /**
@@ -77,7 +74,7 @@ function trackGenerationFailure({
  * @returns {Object} Copilot reply state and methods
  */
 export function useCopilotReply() {
-  const { processEvent, followUp, currentChat } = useCaptain();
+  const { processEvent, followUp, currentChat, captainEnabled } = useCaptain();
   const { updateUISettings } = useUISettings();
 
   const showEditor = ref(false);
@@ -155,6 +152,9 @@ export function useCopilotReply() {
    */
   async function execute(action, data) {
     if (action === 'ask_copilot') {
+      if (!captainEnabled.value) {
+        return;
+      }
       updateUISettings({
         is_contact_sidebar_open: false,
         is_copilot_panel_open: true,

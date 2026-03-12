@@ -21,7 +21,7 @@ const emit = defineEmits(['executeCopilotAction']);
 
 const { t } = useI18n();
 
-const { draftMessage } = useCaptain();
+const { draftMessage, captainEnabled } = useCaptain();
 
 const replyMode = useMapGetter('draftMessages/getReplyEditorMode');
 
@@ -113,19 +113,19 @@ const generalMenuItems = computed(() => {
     });
   }
 
-  if (replyMode.value === REPLY_EDITOR_MODES.NOTE || true) {
+  items.push({
+    label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.SUMMARIZE'),
+    key: 'summarize',
+    icon: 'i-fluent-text-bullet-list-square-sparkle-32-regular',
+  });
+
+  if (captainEnabled.value) {
     items.push({
-      label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.SUMMARIZE'),
-      key: 'summarize',
-      icon: 'i-fluent-text-bullet-list-square-sparkle-32-regular',
+      label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.ASK_COPILOT'),
+      key: 'ask_copilot',
+      icon: 'i-fluent-circle-sparkle-24-regular',
     });
   }
-
-  items.push({
-    label: t('INTEGRATION_SETTINGS.OPEN_AI.REPLY_OPTIONS.ASK_COPILOT'),
-    key: 'ask_copilot',
-    icon: 'i-fluent-circle-sparkle-24-regular',
-  });
 
   return items;
 });

@@ -48,6 +48,10 @@ class Captain::FollowUpService < Captain::BaseTaskService
       You just performed a #{action_context} action for a customer support agent.
       Your job now is to help them refine the result based on their feedback.
       Be concise and focused on their specific request.
+      Keep the output in the same language as the original context unless the agent explicitly asks for another language.
+      If the output is in Portuguese, use Brazilian Portuguese.
+      Preserve the original intent, speaker role, and speech act.
+      Do not turn requests into promises, promises into confirmations, or pending actions into completed actions.
       Output only the reply, no preamble, tags, or explanation.
     PROMPT
   end

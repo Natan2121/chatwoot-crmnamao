@@ -104,7 +104,7 @@ export function useCaptain() {
   /**
    * Rewrites content with a specific operation.
    * @param {string} content - The content to rewrite.
-   * @param {string} operation - The operation (fix_spelling_grammar, casual, professional, expand, shorten, improve, etc).
+   * @param {string} operation - The operation (improve, fix_spelling_grammar, casual, professional, straightforward, confident, friendly).
    * @param {Object} [options={}] - Additional options.
    * @param {AbortSignal} [options.signal] - AbortSignal to cancel the request.
    * @returns {Promise<{message: string, followUpContext?: Object}>} The rewritten content and optional follow-up context.
